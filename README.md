@@ -13,7 +13,8 @@
 
 - **Desarrollo**: https://3000-itbb0sqeu7zjz3xyxl90o-6532622b.e2b.dev
 - **Producción (Cloudflare Pages)**: Pendiente de deployment
-- **GitHub**: Pendiente de configuración
+- **GitHub**: https://github.com/franchut76-hub/canariagenticweb
+- **Backup**: https://page.gensparksite.com/project_backups/tooluse_Tfc3y78ARgifaJU1pPw2Ww.tar.gz
 - **API Base**: `/api/`
 
 ## 🏗️ Arquitectura Técnica
