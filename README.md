@@ -29,7 +29,7 @@
 ### Estructura de Datos
 - **Formularios**: Validación frontend y backend
 - **API Endpoints**: RESTful para contacto y newsletter
-- **Almacenamiento**: Sin persistencia (logs en consola)
+- **Almacenamiento**: Supabase (tabla contactos) con fallback a logs
 - **Archivos Estáticos**: Servidos desde `/public`
 
 ## 📋 Funcionalidades Implementadas
@@ -55,9 +55,11 @@
    - **Contacto**: Formulario funcional con validación
 
 4. **API Backend Funcional**
-   - `POST /api/contact` - Formulario de contacto con validación
+   - `POST /api/contact` - Formulario de contacto con integración Supabase
    - `POST /api/newsletter` - Suscripción a newsletter
    - Validación de emails y campos requeridos
+   - Almacenamiento seguro en base de datos
+   - Sistema de fallback automático
    - Respuestas JSON estructuradas
 
 5. **Características Avanzadas**
@@ -105,13 +107,21 @@
 
 ### Próximos Pasos para Deployment
 1. **Configurar Cloudflare API**: Usar `setup_cloudflare_api_key`
-2. **Crear proyecto**: `wrangler pages project create canariagentic`
-3. **Deploy**: `npm run deploy:prod`
-4. **Configurar dominio**: Opcional, dominio personalizado
+2. **Configurar secrets de Supabase**:
+   ```bash
+   wrangler secret put SUPABASE_URL
+   wrangler secret put SUPABASE_ANON_KEY
+   ```
+3. **Crear proyecto**: `wrangler pages project create canariagentic`
+4. **Deploy**: `npm run deploy:prod`
+5. **Configurar dominio**: Opcional, dominio personalizado
 
 ### Variables de Entorno
-- **Desarrollo**: `.dev.vars` (local)
+- **Desarrollo**: `.dev.vars` (local, configurado)
 - **Producción**: Cloudflare secrets via wrangler
+- **Supabase**: Integración configurada de forma segura
+  - `SUPABASE_URL`: URL del proyecto Supabase
+  - `SUPABASE_ANON_KEY`: Clave anónima para API
 
 ## 🛠️ Desarrollo
 
@@ -145,6 +155,37 @@ webapp/
 ├── wrangler.jsonc         # Configuración Cloudflare
 └── package.json           # Dependencias y scripts
 ```
+
+## 🔒 Configuración de Supabase
+
+### Configuración Segura Implementada
+- **Variables de Entorno**: Credenciales no expuestas en código
+- **Desarrollo Local**: `.dev.vars` configurado (no en Git)
+- **Producción**: Variables configuradas vía Cloudflare secrets
+- **Tabla de Base de Datos**: `contactos` en Supabase
+- **Fallback System**: Sistema de respaldo automático si Supabase falla
+
+### Comandos de Configuración
+```bash
+# Para desarrollo local (ya configurado)
+cp .dev.vars.example .dev.vars
+# Editar .dev.vars con tus credenciales reales
+
+# Para producción
+wrangler secret put SUPABASE_URL
+wrangler secret put SUPABASE_ANON_KEY
+```
+
+### Estructura de la Tabla `contactos`
+- `name` (text): Nombre del contacto
+- `email` (text): Email del contacto  
+- `company` (text): Empresa (opcional)
+- `phone` (text): Teléfono (opcional)
+- `message` (text): Mensaje del contacto
+- `service` (text): Servicio de interés (opcional)
+- `created_at` (timestamp): Fecha de creación
+- `ip_address` (text): IP del usuario
+- `user_agent` (text): Navegador del usuario
 
 ## 🔧 Características Técnicas Avanzadas
 
