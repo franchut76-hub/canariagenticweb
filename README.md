@@ -187,9 +187,9 @@ webapp/
 
 ## 📞 Información de Contacto
 
-- **Email**: contacto@canariagentic.com
-- **Teléfono**: +34 922 XXX XXX  
-- **Ubicación**: Las Palmas de Gran Canaria, España
+- **Email**: franchut76business@gmail.com
+- **Teléfono**: +34 922 150 801  
+- **Ubicación**: Santa Cruz de Tenerife, España
 - **Redes**: LinkedIn, Twitter, Instagram (links preparados)
 
 ## 📊 Métricas de Éxito

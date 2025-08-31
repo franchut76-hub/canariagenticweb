@@ -23,16 +23,69 @@ app.post('/api/contact', async (c) => {
       return c.json({ success: false, message: 'Email inválido' }, 400)
     }
     
-    // Here you would typically save to database or send email
-    // For now, we'll just log and return success
-    console.log('Contact form submission:', {
-      name,
-      email,
-      company,
-      phone,
-      message,
-      service,
-      timestamp: new Date().toISOString()
+    // Get Supabase credentials from environment variables (secure)
+    const supabaseUrl = c.env?.SUPABASE_URL
+    const supabaseKey = c.env?.SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Supabase credentials not configured')
+      // Fallback to console log if Supabase not configured
+      console.log('Contact form submission (fallback):', {
+        name, email, company, phone, message, service,
+        timestamp: new Date().toISOString()
+      })
+      return c.json({ 
+        success: true, 
+        message: 'Mensaje recibido correctamente. Te contactaremos pronto.' 
+      })
+    }
+    
+    // Prepare contact data
+    const contactData = {
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      company: company?.trim() || null,
+      phone: phone?.trim() || null,
+      message: message.trim(),
+      service: service || null,
+      created_at: new Date().toISOString(),
+      ip_address: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown',
+      user_agent: c.req.header('User-Agent') || 'unknown'
+    }
+    
+    // Save to Supabase
+    const supabaseResponse = await fetch(supabaseUrl + '/rest/v1/contactos', {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(contactData)
+    })
+    
+    if (!supabaseResponse.ok) {
+      const errorText = await supabaseResponse.text()
+      console.error('Supabase error:', {
+        status: supabaseResponse.status,
+        statusText: supabaseResponse.statusText,
+        error: errorText
+      })
+      
+      // Fallback to console log if Supabase fails
+      console.log('Contact form submission (fallback after error):', contactData)
+      
+      return c.json({ 
+        success: true, 
+        message: 'Mensaje recibido correctamente. Te contactaremos pronto.' 
+      })
+    }
+    
+    console.log('Contact successfully saved to Supabase:', {
+      name: contactData.name,
+      email: contactData.email,
+      timestamp: contactData.created_at
     })
     
     return c.json({ 
@@ -43,7 +96,7 @@ app.post('/api/contact', async (c) => {
     console.error('Contact form error:', error)
     return c.json({ 
       success: false, 
-      message: 'Error interno del servidor' 
+      message: 'Error interno del servidor. Inténtalo de nuevo.' 
     }, 500)
   }
 })
@@ -667,7 +720,7 @@ app.get('/', (c) => {
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Email</h4>
-                                    <p class="opacity-80">contacto@canariagentic.com</p>
+                                    <p class="opacity-80">franchut76business@gmail.com</p>
                                 </div>
                             </div>
                             
@@ -677,7 +730,7 @@ app.get('/', (c) => {
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Teléfono</h4>
-                                    <p class="opacity-80">+34 922 XXX XXX</p>
+                                    <p class="opacity-80">+34 922 150 801</p>
                                 </div>
                             </div>
                             
@@ -687,7 +740,7 @@ app.get('/', (c) => {
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Ubicación</h4>
-                                    <p class="opacity-80">Las Palmas de Gran Canaria, España</p>
+                                    <p class="opacity-80">Santa Cruz de Tenerife, España</p>
                                 </div>
                             </div>
                         </div>

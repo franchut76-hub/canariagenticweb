@@ -5,7 +5,11 @@
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "vars": {
+    // Variables públicas (no sensibles)
+  },
+  // Variables sensibles se configuran con wrangler secret put
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
