@@ -1024,7 +1024,7 @@ app.get('/', (c) => {
         </div>
         
         <!-- Notification -->
-        <div id="notification" class="fixed bottom-8 right-8 bg-green-500 text-white p-6 rounded-xl shadow-2xl transform translate-y-full transition-transform duration-300 z-50 max-w-sm">
+        <div id="notification" class="fixed bottom-8 right-8 bg-green-500 text-white p-6 rounded-xl shadow-2xl transform translate-y-full transition-transform duration-300 z-50 max-w-sm opacity-0">
             <p id="notification-message" class="font-medium"></p>
         </div>
         
@@ -1175,18 +1175,20 @@ app.get('/', (c) => {
                 
                 // Set colors based on type
                 if (type === 'success') {
-                    notification.className = 'fixed bottom-8 right-8 bg-green-500 text-white p-6 rounded-xl shadow-2xl transition-transform duration-300 z-50 max-w-sm';
+                    notification.className = 'fixed bottom-8 right-8 bg-green-500 text-white p-6 rounded-xl shadow-2xl transition-all duration-300 z-50 max-w-sm';
                 } else {
-                    notification.className = 'fixed bottom-8 right-8 bg-red-500 text-white p-6 rounded-xl shadow-2xl transition-transform duration-300 z-50 max-w-sm';
+                    notification.className = 'fixed bottom-8 right-8 bg-red-500 text-white p-6 rounded-xl shadow-2xl transition-all duration-300 z-50 max-w-sm';
                 }
                 
-                // Show notification
+                // Show notification with animation
                 notification.style.transform = 'translateY(0)';
+                notification.style.opacity = '1';
                 
-                // Hide after 5 seconds
+                // Hide after 4 seconds with smooth animation
                 setTimeout(() => {
+                    notification.style.opacity = '0';
                     notification.style.transform = 'translateY(100%)';
-                }, 5000);
+                }, 4000);
             }
             
             // Add loading animation to buttons
