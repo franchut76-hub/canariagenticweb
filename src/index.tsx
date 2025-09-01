@@ -720,7 +720,7 @@ app.get('/', (c) => {
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Email</h4>
-                                    <p class="opacity-80">franchut76business@gmail.com</p>
+                                    <p class="opacity-80">soporte@canariagentic.com</p>
                                 </div>
                             </div>
                             

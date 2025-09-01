@@ -228,7 +228,7 @@ wrangler secret put SUPABASE_ANON_KEY
 
 ## 📞 Información de Contacto
 
-- **Email**: franchut76business@gmail.com
+- **Email**: soporte@canariagentic.com
 - **Teléfono**: +34 922 150 801  
 - **Ubicación**: Santa Cruz de Tenerife, España
 - **Redes**: LinkedIn, Twitter, Instagram (links preparados)
