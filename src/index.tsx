@@ -2802,7 +2802,7 @@ app.get('/', (c) => {
             <!-- Hero Content - Positioned over parallax -->
             <div class="hero-content relative z-20 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
                 <div class="animate-fade-in">
-                    <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+                    <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-relaxed">
                         Transformando Empresas con
                         <span class="gradient-text block mt-2">Inteligencia Artificial</span>
                     </h1>
