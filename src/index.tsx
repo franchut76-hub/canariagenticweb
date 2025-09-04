@@ -2800,11 +2800,11 @@ app.get('/', (c) => {
             <div class="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-glow"></div>
             
             <!-- Hero Content - Positioned over parallax -->
-            <div class="hero-content relative z-20 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
+            <div class="hero-content relative z-40 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
                 <div class="animate-fade-in">
                     <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-relaxed">
                         Transformando Empresas con
-                        <span class="gradient-text block mt-2">Inteligencia Artificial</span>
+                        <span class="gradient-text block mt-2 relative z-50">Inteligencia Artificial</span>
                     </h1>
                     <p class="text-xl md:text-2xl text-slate-600 mb-10 max-w-4xl mx-auto leading-relaxed">
                         CanarIAgentic es tu partner en soluciones de IA que impulsa la innovación y eficiencia empresarial a través de tecnología vanguardista y estrategias personalizadas.
