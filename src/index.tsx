@@ -1998,6 +1998,114 @@ app.get('/', (c) => {
                 animation-delay: -8s;
             }
             
+            /* Logo flotante de CanarIAgentic */
+            .logo-particle {
+                position: absolute;
+                width: 60px;
+                height: 80px;
+                opacity: 0.7;
+                animation: float-logo 45s linear infinite;
+                animation-delay: -20s;
+                z-index: 2;
+            }
+            
+            .logo-symbol {
+                width: 40px;
+                height: 40px;
+                margin: 0 auto 8px;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .cc-symbol {
+                position: relative;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .cc-symbol::before,
+            .cc-symbol::after {
+                content: 'C';
+                position: absolute;
+                font-size: 24px;
+                font-weight: bold;
+                color: #60a5fa;
+                text-shadow: 
+                    0 2px 4px rgba(96, 165, 250, 0.3),
+                    0 0 8px rgba(96, 165, 250, 0.2);
+                animation: logoGlow 3s ease-in-out infinite;
+            }
+            
+            .cc-symbol::before {
+                transform: translateX(-3px);
+                z-index: 1;
+            }
+            
+            .cc-symbol::after {
+                transform: translateX(3px);
+                z-index: 2;
+                opacity: 0.8;
+            }
+            
+            .logo-text {
+                font-size: 9px;
+                font-weight: 600;
+                text-align: center;
+                line-height: 1.2;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            }
+            
+            .logo-text .canar {
+                color: #60a5fa;
+                text-shadow: 0 1px 2px rgba(96, 165, 250, 0.3);
+            }
+            
+            .logo-text .ia {
+                color: #ffffff;
+                text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+            }
+            
+            .logo-text .gentic {
+                color: #60a5fa;
+                text-shadow: 0 1px 2px rgba(96, 165, 250, 0.3);
+            }
+            
+            @keyframes float-logo {
+                0% {
+                    transform: translateY(120vh) translateX(-50px) rotate(0deg);
+                    opacity: 0;
+                }
+                5% {
+                    opacity: 0.7;
+                }
+                95% {
+                    opacity: 0.7;
+                }
+                100% {
+                    transform: translateY(-120px) translateX(150px) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes logoGlow {
+                0%, 100% {
+                    text-shadow: 
+                        0 2px 4px rgba(96, 165, 250, 0.3),
+                        0 0 8px rgba(96, 165, 250, 0.2);
+                }
+                50% {
+                    text-shadow: 
+                        0 2px 6px rgba(96, 165, 250, 0.5),
+                        0 0 16px rgba(96, 165, 250, 0.4),
+                        0 0 24px rgba(96, 165, 250, 0.2);
+                }
+            }
+            
             @keyframes float-particles {
                 0% {
                     transform: translateY(100vh) translateX(0px) rotate(0deg);
@@ -2711,6 +2819,36 @@ app.get('/', (c) => {
                             <span>Conocer Más</span>
                         </a>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Logo Flotante de CanarIAgentic -->
+            <div class="logo-particle" style="left: 15%; top: 80%;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
+                </div>
+            </div>
+            
+            <!-- Segunda instancia del logo (con diferentes tiempos) -->
+            <div class="logo-particle" style="left: 75%; top: 20%; animation-delay: -35s; animation-duration: 50s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
+                </div>
+            </div>
+            
+            <!-- Tercera instancia del logo (con diferentes tiempos) -->
+            <div class="logo-particle" style="left: 45%; top: 50%; animation-delay: -12s; animation-duration: 40s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
             
