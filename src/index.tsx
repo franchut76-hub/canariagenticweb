@@ -2861,7 +2861,7 @@ app.get('/', (c) => {
         </section>
         
         <!-- Pillars Section -->
-        <section id="pillars" class="py-20 lg:py-32">
+        <section id="pillars" class="relative py-20 lg:py-32 overflow-hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16 section-fade-in">
                     <h2 class="text-4xl lg:text-5xl font-bold text-slate-800 mb-6">
@@ -2976,10 +2976,107 @@ app.get('/', (c) => {
                     </div>
                 </div>
             </div>
+            
+            <!-- Animación Parallax para Pillars -->
+            <div class="hero-parallax-container absolute inset-0 pointer-events-none opacity-30">
+                <!-- Primera fila de tarjetas AI -->
+                <div class="parallax-row parallax-row-1">
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-chart-line text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">AI Analytics</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #7c3aed, #5b21b6);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-brain text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Neural Network</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #059669, #047857);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-cogs text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">ML Training</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Segunda fila de tarjetas -->
+                <div class="parallax-row parallax-row-2">
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #0891b2, #0e7490);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-magic text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Automation</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #d97706, #b45309);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-lightbulb text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Strategy</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-graduation-cap text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Training</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tercera fila de tarjetas -->
+                <div class="parallax-row parallax-row-3">
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #7c2d12, #991b1b);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-eye text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Computer Vision</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #166534, #15803d);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-chart-area text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Analytics</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logos flotantes para Pillars -->
+            <div class="logo-particle" style="left: 20%; top: 15%; animation-delay: -25s; animation-duration: 55s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="floating-logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
+                </div>
+            </div>
+            <div class="logo-particle" style="left: 70%; top: 70%; animation-delay: -40s; animation-duration: 45s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="floating-logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
+                </div>
+            </div>
         </section>
         
         <!-- Services Section -->
-        <section id="services" class="py-20 lg:py-32 bg-gradient-to-br from-slate-100 to-blue-100">
+        <section id="services" class="relative py-20 lg:py-32 bg-gradient-to-br from-slate-100 to-blue-100 overflow-hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16 section-fade-in">
                     <h2 class="text-4xl lg:text-5xl font-bold text-slate-800 mb-6">
@@ -3060,10 +3157,79 @@ app.get('/', (c) => {
                     </div>
                 </div>
             </div>
+            
+            <!-- Animación Parallax para Services -->
+            <div class="hero-parallax-container absolute inset-0 pointer-events-none opacity-25">
+                <!-- Primera fila de tarjetas AI -->
+                <div class="parallax-row parallax-row-1">
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-rocket text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Consultoría</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-users text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Formación</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-robot text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Agentes IA</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Segunda fila -->
+                <div class="parallax-row parallax-row-2">
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-globe-europe text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Web & Marketing</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-chart-bar text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Analytics</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logos flotantes para Services -->
+            <div class="logo-particle" style="left: 10%; top: 25%; animation-delay: -30s; animation-duration: 50s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="floating-logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
+                </div>
+            </div>
+            <div class="logo-particle" style="left: 85%; top: 60%; animation-delay: -15s; animation-duration: 42s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="floating-logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
+                </div>
+            </div>
         </section>
         
         <!-- Testimonials Section -->
-        <section id="testimonials" class="py-20 lg:py-32">
+        <section id="testimonials" class="relative py-20 lg:py-32 overflow-hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16 section-fade-in">
                     <h2 class="text-4xl lg:text-5xl font-bold text-slate-800 mb-6">
@@ -3197,6 +3363,75 @@ app.get('/', (c) => {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Animación Parallax para Testimonials -->
+            <div class="hero-parallax-container absolute inset-0 pointer-events-none opacity-20">
+                <!-- Primera fila de tarjetas AI -->
+                <div class="parallax-row parallax-row-1">
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #ec4899, #db2777);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-heart text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Satisfacción</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-thumbs-up text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Confianza</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #059669, #047857);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-trophy text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Éxito</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Segunda fila -->
+                <div class="parallax-row parallax-row-2">
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-star text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Excelencia</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="parallax-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                        <div class="card-content">
+                            <div class="card-header">
+                                <i class="fas fa-handshake text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Partnership</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logos flotantes para Testimonials -->
+            <div class="logo-particle" style="left: 25%; top: 35%; animation-delay: -22s; animation-duration: 48s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="floating-logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
+                </div>
+            </div>
+            <div class="logo-particle" style="left: 75%; top: 10%; animation-delay: -38s; animation-duration: 52s;">
+                <div class="logo-symbol">
+                    <div class="cc-symbol"></div>
+                </div>
+                <div class="floating-logo-text">
+                    <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
         </section>
