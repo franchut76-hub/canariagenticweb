@@ -2902,7 +2902,7 @@ app.get('/', (c) => {
                                 <span class="text-slate-600">Acompañamiento en implementación</span>
                             </li>
                         </ul>
-                        <button onclick="openModal('formacion')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition-colors mt-auto">
+                        <button onclick="openModal('formacion')" class="w-full bg-gradient-to-r from-accent to-secondary text-white py-3 rounded-xl font-medium transition-all hover:shadow-lg hover:-translate-y-1 mt-auto">
                             <i class="fas fa-eye mr-2"></i>Ver Detalles
                         </button>
                     </div>
@@ -2936,7 +2936,7 @@ app.get('/', (c) => {
                                 <span class="text-slate-600">Evaluación de tecnologías y proveedores</span>
                             </li>
                         </ul>
-                        <button onclick="openModal('consultoria')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition-colors mt-auto">
+                        <button onclick="openModal('consultoria')" class="w-full bg-gradient-to-r from-accent to-secondary text-white py-3 rounded-xl font-medium transition-all hover:shadow-lg hover:-translate-y-1 mt-auto">
                             <i class="fas fa-eye mr-2"></i>Ver Detalles
                         </button>
                     </div>
