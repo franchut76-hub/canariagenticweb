@@ -168,8 +168,9 @@ webapp/
 ### Comandos de Configuración
 ```bash
 # Para desarrollo local (ya configurado)
-cp .dev.vars.example .dev.vars
-# Editar .dev.vars con tus credenciales reales
+# Proyecto: paginawebprueba (ryoyexwvvvswahqoffqu)
+# URL: https://ryoyexwvvvswahqoffqu.supabase.co
+# Service role key configurada
 
 # Para producción
 wrangler secret put SUPABASE_URL

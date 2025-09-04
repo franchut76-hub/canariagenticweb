@@ -128,6 +128,168 @@ app.post('/api/newsletter', async (c) => {
   }
 })
 
+// API endpoint for cookie consent logging (legal compliance)
+app.post('/api/cookie-consent', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { 
+      user_id, 
+      decision_type, 
+      cookie_settings, 
+      ip_address, 
+      user_agent, 
+      page_url 
+    } = body
+    
+    // Basic validation
+    if (!user_id || !decision_type || !cookie_settings) {
+      return c.json({ success: false, message: 'Datos incompletos' }, 400)
+    }
+    
+    // Prepare consent data with all metadata for legal compliance
+    const consentData = {
+      user_id: user_id,
+      decision_type: decision_type,
+      cookie_settings: cookie_settings,
+      ip_address: ip_address || c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown',
+      user_agent: user_agent || c.req.header('User-Agent') || 'unknown',
+      page_url: page_url || c.req.header('Referer') || window?.location?.href || 'unknown',
+      timestamp: new Date().toISOString(),
+      consent_version: '1.0'
+    }
+    
+    // Get Supabase credentials from environment variables (secure)
+    const supabaseUrl = c.env?.SUPABASE_URL
+    const supabaseKey = c.env?.SUPABASE_ANON_KEY
+    
+    // Try to save to Supabase first
+    if (supabaseUrl && supabaseKey) {
+      try {
+        const supabaseResponse = await fetch(supabaseUrl + '/rest/v1/cookie_consents', {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': 'Bearer ' + supabaseKey,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(consentData)
+        })
+        
+        if (supabaseResponse.ok) {
+          console.log('✅ Cookie consent saved to Supabase:', {
+            user_id: consentData.user_id,
+            decision_type: consentData.decision_type,
+            timestamp: consentData.timestamp
+          })
+          
+          return c.json({ 
+            success: true, 
+            message: 'Consentimiento registrado en base de datos',
+            storage: 'supabase'
+          })
+        } else {
+          throw new Error('Supabase error: ' + supabaseResponse.status)
+        }
+      } catch (supabaseError) {
+        console.warn('⚠️ Supabase unavailable, using fallback:', supabaseError.message)
+      }
+    }
+    
+    // Fallback: Log locally for compliance (always works)
+    console.log('📝 Cookie consent logged (legal compliance):', {
+      ...consentData,
+      note: 'Stored locally - create Supabase table for database storage'
+    })
+    
+    return c.json({ 
+      success: true, 
+      message: 'Consentimiento registrado correctamente',
+      storage: 'local_logs'
+    })
+    
+  } catch (error) {
+    console.error('❌ Cookie consent error:', error)
+    return c.json({ 
+      success: false, 
+      message: 'Error interno del servidor' 
+    }, 500)
+  }
+})
+
+// Health check endpoint
+app.get('/api/health', (c) => {
+  return c.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    service: 'CanarIAgentic'
+  })
+})
+
+// API endpoint to initialize cookie consent table in Supabase
+app.post('/api/init-cookie-table', async (c) => {
+  try {
+    // Get Supabase credentials from environment variables
+    const supabaseUrl = c.env?.SUPABASE_URL
+    const supabaseKey = c.env?.SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return c.json({ success: false, message: 'Supabase no configurado' }, 400)
+    }
+    
+    // Create cookie_consents table if it doesn't exist
+    const createTableSQL = `
+      CREATE TABLE IF NOT EXISTS cookie_consents (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        decision_type TEXT NOT NULL CHECK (decision_type IN ('accept_all', 'reject_all', 'custom')),
+        cookie_settings JSONB NOT NULL,
+        ip_address TEXT,
+        user_agent TEXT,
+        page_url TEXT,
+        timestamp TIMESTAMPTZ DEFAULT NOW(),
+        consent_version TEXT DEFAULT '1.0',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_cookie_consents_user_id ON cookie_consents(user_id);
+      CREATE INDEX IF NOT EXISTS idx_cookie_consents_timestamp ON cookie_consents(timestamp);
+    `
+    
+    // Execute SQL using Supabase REST API
+    const response = await fetch(supabaseUrl + '/rest/v1/rpc/exec_sql', {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sql: createTableSQL })
+    })
+    
+    if (response.ok) {
+      console.log('Cookie consents table initialized successfully')
+      return c.json({ 
+        success: true, 
+        message: 'Tabla de consentimientos inicializada correctamente' 
+      })
+    } else {
+      const errorText = await response.text()
+      console.error('Failed to initialize cookie table:', errorText)
+      return c.json({ 
+        success: false, 
+        message: 'Error al inicializar tabla: ' + errorText 
+      }, 500)
+    }
+  } catch (error) {
+    console.error('Cookie table initialization error:', error)
+    return c.json({ 
+      success: false, 
+      message: 'Error interno del servidor' 
+    }, 500)
+  }
+})
+
 // Default route - Main page
 app.get('/', (c) => {
   return c.html(`
@@ -136,7 +298,7 @@ app.get('/', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="CanarIAgentic - Agencia líder en soluciones de inteligencia artificial para empresas. Formación, consultoría y desarrollo de agentes IA.">
+        <meta name="description" content="CanarIAgentic - Agencia especializada en soluciones de inteligencia artificial para empresas. Formación, consultoría y desarrollo de agentes IA.">
         <meta name="keywords" content="inteligencia artificial, IA, consultoría IA, formación IA, agentes IA, transformación digital, Canarias">
         <meta name="author" content="CanarIAgentic">
         <meta name="robots" content="index, follow">
@@ -212,6 +374,1413 @@ app.get('/', (c) => {
                 to { opacity: 1; }
             }
             
+            /* 3D Service Cards Animation Styles */
+            .services-grid {
+                perspective: 1000px;
+            }
+            
+            .service-card-3d {
+                transform-style: preserve-3d;
+                transition: all 0.2s ease-linear;
+                transform-origin: center center;
+            }
+            
+            .service-card-3d:hover {
+                transform-style: preserve-3d;
+            }
+            
+            /* 3D Card Elements */
+            .service-card-3d .h-48 {
+                transform-style: preserve-3d;
+                transition: transform 0.2s ease-linear;
+            }
+            
+            .service-card-3d .p-8 {
+                transform-style: preserve-3d;
+                transition: transform 0.2s ease-linear;
+            }
+            
+            .service-card-3d h3 {
+                transform-style: preserve-3d;
+                transition: transform 0.2s ease-linear;
+            }
+            
+            .service-card-3d p {
+                transform-style: preserve-3d;
+                transition: transform 0.2s ease-linear;
+            }
+            
+            .service-card-3d a {
+                transform-style: preserve-3d;
+                transition: transform 0.2s ease-linear;
+            }
+            
+            .service-card-3d i {
+                transform-style: preserve-3d;
+                transition: transform 0.2s ease-linear;
+            }
+            
+            /* Enhanced hover effects for 3D cards */
+            .service-card-3d:hover {
+                box-shadow: 
+                    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                    0 0 50px rgba(59, 130, 246, 0.15);
+            }
+            
+            .service-card-3d:hover .h-48 {
+                transform: translateZ(20px);
+            }
+            
+            .service-card-3d:hover h3 {
+                transform: translateZ(30px);
+            }
+            
+            .service-card-3d:hover p {
+                transform: translateZ(15px);
+            }
+            
+            .service-card-3d:hover a {
+                transform: translateZ(40px);
+            }
+            
+            /* Enhanced 3D effects */
+            .service-card-3d:hover .h-48 i {
+                transform: translateZ(30px) scale(1.1);
+            }
+            
+            /* Hero Parallax Styles */
+            .hero-parallax-container {
+                perspective: 1000px;
+                transform-style: preserve-3d;
+                opacity: 0.4; /* Reduced opacity so it doesn't interfere with text */
+                z-index: 1; /* Behind content */
+            }
+            
+            .parallax-row {
+                position: absolute;
+                width: 100%;
+                height: 300px; /* Reduced height */
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 2rem;
+                transform-style: preserve-3d;
+            }
+            
+            .parallax-row-1 {
+                top: 5%; /* Moved higher */
+                animation: parallaxMoveRight 60s linear infinite;
+            }
+            
+            .parallax-row-2 {
+                top: 35%; /* Adjusted to not overlap with main content */
+                animation: parallaxMoveLeft 45s linear infinite;
+            }
+            
+            .parallax-row-3 {
+                top: 75%; /* Moved lower */
+                animation: parallaxMoveRight 50s linear infinite;
+            }
+            
+            @keyframes parallaxMoveRight {
+                0% { transform: translateX(-100%) rotateY(-15deg) rotateX(5deg); }
+                100% { transform: translateX(calc(100vw + 100%)) rotateY(-15deg) rotateX(5deg); }
+            }
+            
+            @keyframes parallaxMoveLeft {
+                0% { transform: translateX(calc(100vw + 100%)) rotateY(15deg) rotateX(-5deg); }
+                100% { transform: translateX(-100%) rotateY(15deg) rotateX(-5deg); }
+            }
+            
+            @keyframes cardPulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 0.6; }
+            }
+            
+            /* AI-Specific Visual Elements */
+            
+            /* AI Dashboard Chart Animation */
+            .chart-container {
+                display: flex;
+                align-items: end;
+                justify-content: space-between;
+                height: 60px;
+                padding: 0 10px;
+            }
+            
+            .chart-bar {
+                width: 12px;
+                background: linear-gradient(to top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+                border-radius: 2px;
+                animation: chartPulse 2s ease-in-out infinite;
+            }
+            
+            @keyframes chartPulse {
+                0%, 100% { transform: scaleY(0.8); }
+                50% { transform: scaleY(1.2); }
+            }
+            
+            .metrics-display {
+                margin-top: 10px;
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.9);
+            }
+            
+            .metric {
+                margin-bottom: 3px;
+            }
+            
+            .metric-value {
+                color: #00ff88;
+                font-weight: bold;
+            }
+            
+            /* Neural Network Visualization */
+            .network-visualization {
+                position: relative;
+                height: 100px;
+                padding: 10px;
+            }
+            
+            .network-layer {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                gap: 8px;
+            }
+            
+            .network-layer:nth-child(1) { left: 10px; top: 10px; }
+            .network-layer:nth-child(2) { left: 50%; top: 5px; transform: translateX(-50%); }
+            .network-layer:nth-child(3) { right: 10px; top: 20px; }
+            
+            .neuron {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.3);
+                animation: neuronPulse 3s ease-in-out infinite;
+            }
+            
+            .neuron.active {
+                background: #00ff88;
+                box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+            }
+            
+            @keyframes neuronPulse {
+                0%, 100% { opacity: 0.5; transform: scale(1); }
+                50% { opacity: 1; transform: scale(1.2); }
+            }
+            
+            .connections {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1;
+            }
+            
+            .connection {
+                position: absolute;
+                height: 1px;
+                background: rgba(255, 255, 255, 0.2);
+                animation: connectionFlow 2s ease-in-out infinite;
+            }
+            
+            .connection.active {
+                background: #00ff88;
+                box-shadow: 0 0 3px rgba(0, 255, 136, 0.8);
+            }
+            
+            @keyframes connectionFlow {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+            
+            /* Machine Learning Training */
+            .training-progress {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .progress-ring {
+                position: relative;
+                width: 60px;
+                height: 60px;
+            }
+            
+            .progress-circle {
+                width: 100%;
+                height: 100%;
+                border: 3px solid rgba(255, 255, 255, 0.2);
+                border-top: 3px solid #00ff88;
+                border-radius: 50%;
+                animation: progressSpin 2s linear infinite;
+            }
+            
+            @keyframes progressSpin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .progress-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 14px;
+                font-weight: bold;
+                color: #00ff88;
+            }
+            
+            .training-stats {
+                font-size: 9px;
+                color: rgba(255, 255, 255, 0.8);
+                text-align: center;
+            }
+            
+            .stat-item {
+                margin-bottom: 2px;
+            }
+            
+            /* Data Pipeline Flow */
+            .pipeline-flow {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                padding: 10px;
+            }
+            
+            .pipeline-step {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .step-node {
+                background: rgba(255, 255, 255, 0.2);
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 9px;
+                color: white;
+                min-width: 60px;
+                text-align: center;
+            }
+            
+            .step-node.active {
+                background: #00ff88;
+                color: #000;
+                animation: nodeGlow 2s ease-in-out infinite;
+            }
+            
+            .step-node.processing {
+                background: #ffaa00;
+                color: #000;
+                animation: nodeProcessing 1.5s ease-in-out infinite;
+            }
+            
+            @keyframes nodeGlow {
+                0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.5); }
+                50% { box-shadow: 0 0 15px rgba(0, 255, 136, 0.8); }
+            }
+            
+            @keyframes nodeProcessing {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+            
+            .flow-arrow {
+                width: 20px;
+                height: 2px;
+                background: rgba(255, 255, 255, 0.3);
+                position: relative;
+            }
+            
+            .flow-arrow.active {
+                background: #00ff88;
+            }
+            
+            .flow-arrow.active::after {
+                content: '';
+                position: absolute;
+                right: -4px;
+                top: -2px;
+                width: 0;
+                height: 0;
+                border-left: 4px solid #00ff88;
+                border-top: 3px solid transparent;
+                border-bottom: 3px solid transparent;
+            }
+            
+            /* AI Agent Interface */
+            .agent-interface {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                padding: 10px;
+            }
+            
+            .agent-avatar {
+                position: relative;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .avatar-core {
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(45deg, #00ff88, #00aa66);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .avatar-core.pulsing {
+                animation: avatarPulse 2s ease-in-out infinite;
+            }
+            
+            @keyframes avatarPulse {
+                0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+                50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+            }
+            
+            .avatar-ring {
+                position: absolute;
+                top: -5px;
+                left: -5px;
+                right: -5px;
+                bottom: -5px;
+                border: 2px solid rgba(0, 255, 136, 0.3);
+                border-radius: 50%;
+                animation: ringRotate 3s linear infinite;
+            }
+            
+            @keyframes ringRotate {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .agent-status {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.9);
+            }
+            
+            .status-indicator {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #ff4444;
+            }
+            
+            .status-indicator.active {
+                background: #00ff88;
+                animation: statusBlink 2s ease-in-out infinite;
+            }
+            
+            @keyframes statusBlink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            
+            .agent-metrics {
+                width: 100%;
+                font-size: 9px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            
+            .metric-bar {
+                width: 100%;
+                height: 8px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 4px;
+                overflow: hidden;
+                margin-bottom: 4px;
+            }
+            
+            .metric-fill {
+                height: 100%;
+                background: linear-gradient(to right, #00ff88, #00aa66);
+                animation: metricFlow 3s ease-in-out infinite;
+            }
+            
+            @keyframes metricFlow {
+                0%, 100% { opacity: 0.8; }
+                50% { opacity: 1; }
+            }
+            
+            /* Automation Flow */
+            .automation-diagram {
+                padding: 15px 10px;
+            }
+            
+            .workflow-step {
+                display: flex;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            
+            .step-icon {
+                font-size: 18px;
+                margin-right: 8px;
+                animation: iconBounce 2s ease-in-out infinite;
+            }
+            
+            .step-icon.processing {
+                animation: iconSpin 1s linear infinite;
+            }
+            
+            @keyframes iconBounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
+            }
+            
+            @keyframes iconSpin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .automation-stats {
+                margin-top: 10px;
+                font-size: 9px;
+                color: rgba(255, 255, 255, 0.9);
+            }
+            
+            .stat {
+                margin-bottom: 3px;
+                padding: 2px 6px;
+                background: rgba(0, 255, 136, 0.2);
+                border-radius: 8px;
+                display: inline-block;
+                margin-right: 5px;
+            }
+            
+            .parallax-card {
+                flex-shrink: 0;
+                width: 280px;
+                height: 350px;
+                border-radius: 20px;
+                overflow: hidden;
+                transform-style: preserve-3d;
+                transition: all 0.3s ease;
+                box-shadow: 
+                    0 20px 40px rgba(0, 0, 0, 0.1),
+                    0 10px 20px rgba(0, 0, 0, 0.06);
+            }
+            
+            .parallax-card:hover {
+                transform: translateY(-10px) scale(1.05);
+                box-shadow: 
+                    0 30px 60px rgba(0, 0, 0, 0.2),
+                    0 15px 30px rgba(0, 0, 0, 0.1);
+            }
+            
+            .card-content {
+                width: 100%;
+                height: 100%;
+                padding: 2rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .card-content::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.1) 0%,
+                    rgba(255, 255, 255, 0.05) 50%,
+                    rgba(0, 0, 0, 0.1) 100%
+                );
+                pointer-events: none;
+            }
+            
+            .card-header {
+                text-align: center;
+                z-index: 1;
+                position: relative;
+            }
+            
+            .card-preview {
+                z-index: 1;
+                position: relative;
+            }
+            
+            .preview-line, .preview-button, .preview-input,
+            .preview-square, .preview-quote, .preview-author,
+            .preview-pill, .preview-chart, .preview-website,
+            .preview-document, .preview-bar, .preview-circle,
+            .preview-arrow, .preview-node, .preview-dot {
+                border-radius: 4px;
+                opacity: 0.7;
+            }
+            
+            .preview-line { height: 8px; }
+            .preview-button { height: 24px; }
+            .preview-input { height: 20px; }
+            .preview-square { aspect-ratio: 1; }
+            .preview-quote { height: 40px; }
+            .preview-author { height: 12px; }
+            .preview-pill { height: 12px; }
+            .preview-chart { height: 50px; }
+            .preview-website { height: 40px; }
+            .preview-document { height: 32px; }
+            
+            /* Responsive parallax */
+            @media (max-width: 768px) {
+                .parallax-card {
+                    width: 220px;
+                    height: 280px;
+                }
+                
+                .card-content {
+                    padding: 1.5rem;
+                }
+                
+                .card-header i {
+                    font-size: 2rem !important;
+                }
+                
+                .card-header h3 {
+                    font-size: 1rem !important;
+                }
+            }
+            
+            /* Hero content positioning */
+            .hero-content {
+                backdrop-filter: blur(8px);
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 30px;
+                padding: 2rem;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                z-index: 30; /* Ensure it's above parallax */
+                position: relative;
+            }
+            
+            /* Enhanced text readability */
+            .hero-content h1 {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            
+            .hero-content p {
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+            
+            /* Additional AI Elements Styles */
+            
+            /* Strategy Analysis */
+            .strategy-analysis {
+                padding: 10px;
+            }
+            
+            .analysis-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            
+            .analysis-box {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 8px;
+                border-radius: 6px;
+                text-align: center;
+            }
+            
+            .box-value {
+                font-size: 12px;
+                font-weight: bold;
+                color: #ffaa00;
+            }
+            
+            .box-label {
+                font-size: 8px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            
+            .recommendation-panel {
+                font-size: 8px;
+                color: rgba(255, 255, 255, 0.9);
+            }
+            
+            .rec-item {
+                margin-bottom: 3px;
+                padding: 2px 4px;
+                border-radius: 3px;
+            }
+            
+            .rec-item.active {
+                background: rgba(0, 255, 136, 0.2);
+                color: #00ff88;
+            }
+            
+            /* Training Platform */
+            .training-interface {
+                padding: 10px;
+            }
+            
+            .course-progress {
+                margin-bottom: 12px;
+            }
+            
+            .course-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 5px;
+                font-size: 8px;
+                color: rgba(255, 255, 255, 0.7);
+            }
+            
+            .course-item.completed {
+                color: #00ff88;
+            }
+            
+            .course-item.active {
+                color: #ffaa00;
+                animation: courseGlow 2s ease-in-out infinite;
+            }
+            
+            .course-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.3);
+            }
+            
+            .course-item.completed .course-dot {
+                background: #00ff88;
+            }
+            
+            .course-item.active .course-dot {
+                background: #ffaa00;
+                animation: dotPulse 1s ease-in-out infinite;
+            }
+            
+            @keyframes courseGlow {
+                0%, 100% { opacity: 0.8; }
+                50% { opacity: 1; }
+            }
+            
+            @keyframes dotPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.3); }
+            }
+            
+            .skill-meter {
+                font-size: 9px;
+                color: rgba(255, 255, 255, 0.9);
+            }
+            
+            .skill-bar {
+                width: 100%;
+                height: 6px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 3px;
+                overflow: hidden;
+                margin-bottom: 4px;
+            }
+            
+            .skill-fill {
+                height: 100%;
+                background: linear-gradient(to right, #3b82f6, #06b6d4);
+                border-radius: 3px;
+                animation: skillProgress 3s ease-in-out infinite;
+            }
+            
+            @keyframes skillProgress {
+                0%, 100% { opacity: 0.8; }
+                50% { opacity: 1; transform: scaleY(1.2); }
+            }
+            
+            /* Predictive Analytics */
+            .prediction-charts {
+                padding: 10px;
+                position: relative;
+                height: 80px;
+            }
+            
+            .trend-line {
+                position: relative;
+                height: 50px;
+                background: linear-gradient(to right, transparent 0%, rgba(0, 255, 136, 0.1) 50%, rgba(255, 170, 0, 0.1) 100%);
+                border-radius: 4px;
+                margin-bottom: 10px;
+            }
+            
+            .data-points {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+            }
+            
+            .point {
+                position: absolute;
+                width: 6px;
+                height: 6px;
+                background: #00ff88;
+                border-radius: 50%;
+                animation: pointGlow 2s ease-in-out infinite;
+            }
+            
+            .point.prediction {
+                background: #ffaa00;
+                animation: pointPrediction 3s ease-in-out infinite;
+            }
+            
+            .point.active {
+                background: #ff4444;
+                transform: scale(1.5);
+            }
+            
+            @keyframes pointGlow {
+                0%, 100% { box-shadow: 0 0 3px rgba(0, 255, 136, 0.5); }
+                50% { box-shadow: 0 0 8px rgba(0, 255, 136, 0.8); }
+            }
+            
+            @keyframes pointPrediction {
+                0%, 100% { opacity: 0.6; box-shadow: 0 0 3px rgba(255, 170, 0, 0.5); }
+                50% { opacity: 1; box-shadow: 0 0 8px rgba(255, 170, 0, 0.8); }
+            }
+            
+            .forecast-info {
+                font-size: 8px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            
+            .forecast-item {
+                margin-bottom: 2px;
+                color: #ffaa00;
+            }
+            
+            /* NLP Analysis */
+            .nlp-interface {
+                padding: 10px;
+            }
+            
+            .text-analysis {
+                margin-bottom: 12px;
+            }
+            
+            .analysis-bubble {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 4px 8px;
+                border-radius: 10px;
+                margin-bottom: 4px;
+                font-size: 8px;
+                animation: bubbleFloat 3s ease-in-out infinite;
+            }
+            
+            .analysis-bubble.positive {
+                background: rgba(0, 255, 136, 0.2);
+                color: #00ff88;
+            }
+            
+            .analysis-bubble.neutral {
+                background: rgba(59, 130, 246, 0.2);
+                color: #3b82f6;
+            }
+            
+            .analysis-bubble.processing {
+                background: rgba(255, 170, 0, 0.2);
+                color: #ffaa00;
+                animation: bubbleProcessing 1.5s ease-in-out infinite;
+            }
+            
+            @keyframes bubbleFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-2px); }
+            }
+            
+            @keyframes bubbleProcessing {
+                0%, 100% { opacity: 0.7; }
+                50% { opacity: 1; }
+            }
+            
+            .nlp-metrics {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .metric-circle {
+                position: relative;
+                width: 40px;
+                height: 40px;
+                margin-bottom: 5px;
+            }
+            
+            .circle-progress {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: conic-gradient(#00ff88 0deg, #00ff88 calc(var(--progress) * 3.6deg), rgba(255, 255, 255, 0.2) calc(var(--progress) * 3.6deg));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .circle-text {
+                font-size: 10px;
+                font-weight: bold;
+                color: #00ff88;
+            }
+            
+            .metric-label {
+                font-size: 8px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            
+            /* Computer Vision */
+            .vision-interface {
+                padding: 10px;
+            }
+            
+            .detection-grid {
+                position: relative;
+                height: 60px;
+                background: linear-gradient(45deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.1));
+                border-radius: 4px;
+                margin-bottom: 10px;
+            }
+            
+            .detection-box {
+                position: absolute;
+                width: 30px;
+                height: 30px;
+                top: 15px;
+            }
+            
+            .detection-box:first-child { left: 20px; }
+            .detection-box:last-child { right: 20px; }
+            
+            .box-outline {
+                width: 100%;
+                height: 100%;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 4px;
+            }
+            
+            .detection-box.active .box-outline {
+                border-color: #00ff88;
+                animation: detectionScan 2s ease-in-out infinite;
+            }
+            
+            @keyframes detectionScan {
+                0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.3); }
+                50% { box-shadow: 0 0 15px rgba(0, 255, 136, 0.6); }
+            }
+            
+            .detection-label {
+                position: absolute;
+                bottom: -15px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 7px;
+                color: #00ff88;
+                background: rgba(0, 0, 0, 0.7);
+                padding: 1px 4px;
+                border-radius: 2px;
+            }
+            
+            .vision-stats {
+                font-size: 9px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            
+            .stat-row {
+                margin-bottom: 2px;
+            }
+            
+            .stat-row span {
+                color: #00ff88;
+                font-weight: bold;
+            }
+            
+            /* Deep Learning Architecture */
+            .dl-architecture {
+                padding: 10px;
+            }
+            
+            .layer-stack {
+                margin-bottom: 10px;
+            }
+            
+            .dl-layer {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 4px 8px;
+                border-radius: 4px;
+                margin-bottom: 4px;
+                font-size: 8px;
+                text-align: center;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            
+            .dl-layer.input {
+                background: rgba(59, 130, 246, 0.3);
+                color: #3b82f6;
+            }
+            
+            .dl-layer.hidden {
+                background: rgba(147, 51, 234, 0.3);
+                color: #9333ea;
+            }
+            
+            .dl-layer.hidden.active {
+                background: rgba(147, 51, 234, 0.5);
+                animation: layerProcess 2s ease-in-out infinite;
+            }
+            
+            .dl-layer.output {
+                background: rgba(0, 255, 136, 0.3);
+                color: #00ff88;
+            }
+            
+            @keyframes layerProcess {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); box-shadow: 0 0 10px rgba(147, 51, 234, 0.5); }
+            }
+            
+            .dl-info {
+                font-size: 8px;
+                color: rgba(255, 255, 255, 0.8);
+            }
+            
+            .info-item {
+                margin-bottom: 2px;
+            }
+            
+            /* Real-time Analytics */
+            .realtime-dashboard {
+                padding: 10px;
+            }
+            
+            .live-chart {
+                height: 50px;
+                display: flex;
+                align-items: end;
+                justify-content: space-between;
+                padding: 0 10px;
+                margin-bottom: 10px;
+                background: linear-gradient(to top, rgba(0, 255, 136, 0.1), transparent);
+                border-radius: 4px;
+            }
+            
+            .chart-line {
+                display: flex;
+                align-items: end;
+                gap: 3px;
+                height: 100%;
+            }
+            
+            .line-segment {
+                width: 8px;
+                background: linear-gradient(to top, #00ff88, rgba(0, 255, 136, 0.6));
+                border-radius: 2px 2px 0 0;
+                animation: realtimePulse 1.5s ease-in-out infinite;
+            }
+            
+            @keyframes realtimePulse {
+                0%, 100% { opacity: 0.7; }
+                50% { opacity: 1; transform: scaleY(1.1); }
+            }
+            
+            .live-metrics {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .live-value {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .value-number {
+                font-size: 12px;
+                font-weight: bold;
+                color: #00ff88;
+                animation: numberFlicker 3s ease-in-out infinite;
+            }
+            
+            @keyframes numberFlicker {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.8; }
+            }
+            
+            .value-label {
+                font-size: 7px;
+                color: rgba(255, 255, 255, 0.7);
+            }
+            
+            .status-indicator.live {
+                width: 12px;
+                height: 12px;
+                background: #00ff88;
+                animation: liveIndicator 1s ease-in-out infinite;
+            }
+            
+            @keyframes liveIndicator {
+                0%, 100% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.6; transform: scale(1.2); }
+            }
+            
+            /* AI-Powered Search */
+            .search-interface {
+                padding: 10px;
+            }
+            
+            .search-query {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 6px 10px;
+                border-radius: 15px;
+                margin-bottom: 10px;
+            }
+            
+            .query-text {
+                font-size: 8px;
+                color: rgba(255, 255, 255, 0.9);
+                font-style: italic;
+            }
+            
+            .search-spinner {
+                width: 12px;
+                height: 12px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-top: 2px solid #00ff88;
+                border-radius: 50%;
+                animation: searchSpin 1s linear infinite;
+            }
+            
+            @keyframes searchSpin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .search-results {
+                max-height: 60px;
+                overflow: hidden;
+            }
+            
+            .result-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 3px 6px;
+                margin-bottom: 3px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 6px;
+                font-size: 7px;
+                animation: resultAppear 0.5s ease-out;
+            }
+            
+            .result-item:nth-child(1) { animation-delay: 0.1s; }
+            .result-item:nth-child(2) { animation-delay: 0.2s; }
+            .result-item:nth-child(3) { animation-delay: 0.3s; }
+            
+            @keyframes resultAppear {
+                0% { opacity: 0; transform: translateX(-10px); }
+                100% { opacity: 1; transform: translateX(0); }
+            }
+            
+            .result-score {
+                color: #00ff88;
+                font-weight: bold;
+            }
+            
+            .result-text {
+                color: rgba(255, 255, 255, 0.9);
+            }
+            
+            /* Responsive adjustments for AI elements */
+            @media (max-width: 768px) {
+                .chart-container, .live-chart {
+                    height: 40px;
+                }
+                
+                .chart-bar, .line-segment {
+                    width: 8px;
+                }
+                
+                .network-layer {
+                    gap: 6px;
+                }
+                
+                .neuron {
+                    width: 12px;
+                    height: 12px;
+                }
+                
+                .progress-ring {
+                    width: 45px;
+                    height: 45px;
+                }
+                
+                .agent-avatar {
+                    width: 40px;
+                    height: 40px;
+                }
+                
+                .detection-box {
+                    width: 25px;
+                    height: 25px;
+                }
+                
+                .metric-circle {
+                    width: 35px;
+                    height: 35px;
+                }
+                
+                .training-stats, .vision-stats, .dl-info {
+                    font-size: 8px;
+                }
+            }
+            
+            /* Performance optimizations */
+            .parallax-card * {
+                will-change: transform, opacity;
+            }
+            
+            .chart-bar, .neuron, .progress-circle, .avatar-core {
+                transform: translateZ(0);
+                backface-visibility: hidden;
+            }
+            
+            /* Infinite Moving Testimonials */
+            .infinite-testimonials-container {
+                height: 400px;
+                mask-image: linear-gradient(to right, transparent, white 10%, white 90%, transparent);
+                -webkit-mask-image: linear-gradient(to right, transparent, white 10%, white 90%, transparent);
+            }
+            
+            .testimonials-scroller {
+                display: flex;
+                gap: 2rem;
+                animation: scroll-left 40s linear infinite;
+                width: max-content;
+                min-width: 100%;
+            }
+            
+            .testimonials-scroller:hover {
+                animation-play-state: paused;
+            }
+            
+            @keyframes scroll-left {
+                0% {
+                    transform: translateX(0);
+                }
+                100% {
+                    transform: translateX(calc(-100% - 2rem));
+                }
+            }
+            
+            @keyframes scroll-right {
+                0% {
+                    transform: translateX(calc(-100% - 2rem));
+                }
+                100% {
+                    transform: translateX(0);
+                }
+            }
+            
+            .testimonial-card {
+                flex-shrink: 0;
+                width: 380px;
+                background: linear-gradient(180deg, #fafafa, #f5f5f5);
+                border: 1px solid #e2e8f0;
+                border-radius: 1rem;
+                padding: 2rem;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 
+                    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                transition: all 0.3s ease;
+                transform: translateZ(0);
+                backface-visibility: hidden;
+            }
+            
+            .testimonial-card:hover {
+                transform: translateY(-8px) scale(1.02);
+                box-shadow: 
+                    0 20px 25px -5px rgba(0, 0, 0, 0.15),
+                    0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            }
+            
+            .testimonial-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                    135deg,
+                    rgba(59, 130, 246, 0.05) 0%,
+                    rgba(6, 182, 212, 0.05) 50%,
+                    rgba(16, 185, 129, 0.05) 100%
+                );
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            }
+            
+            .testimonial-card:hover::before {
+                opacity: 1;
+            }
+            
+            .card-glow {
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(
+                    135deg,
+                    rgba(59, 130, 246, 0.3),
+                    rgba(6, 182, 212, 0.3),
+                    rgba(16, 185, 129, 0.3)
+                );
+                border-radius: 1rem;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                z-index: -1;
+                filter: blur(4px);
+            }
+            
+            .testimonial-card:hover .card-glow {
+                opacity: 0.6;
+                animation: glowPulse 2s ease-in-out infinite;
+            }
+            
+            @keyframes glowPulse {
+                0%, 100% { 
+                    opacity: 0.6; 
+                    transform: scale(1);
+                }
+                50% { 
+                    opacity: 0.8; 
+                    transform: scale(1.02);
+                }
+            }
+            
+            .testimonial-card blockquote {
+                font-size: 0.95rem;
+                line-height: 1.6;
+                position: relative;
+                z-index: 1;
+            }
+            
+            .testimonial-card blockquote::before {
+                content: '"';
+                font-size: 3rem;
+                color: rgba(59, 130, 246, 0.3);
+                position: absolute;
+                top: -0.5rem;
+                left: -0.5rem;
+                font-family: Georgia, serif;
+                line-height: 1;
+            }
+            
+            .testimonial-card .fas.fa-star {
+                margin-right: 0.25rem;
+                filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+                transition: all 0.3s ease;
+            }
+            
+            .testimonial-card:hover .fas.fa-star {
+                transform: scale(1.1);
+                filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
+            }
+            
+            /* Author avatar enhancements */
+            .testimonial-card .w-12.h-12 {
+                transition: all 0.3s ease;
+                position: relative;
+            }
+            
+            .testimonial-card:hover .w-12.h-12 {
+                transform: scale(1.1);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            }
+            
+            .testimonial-card .w-12.h-12::after {
+                content: '';
+                position: absolute;
+                inset: -2px;
+                border-radius: 50%;
+                background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                z-index: -1;
+            }
+            
+            .testimonial-card:hover .w-12.h-12::after {
+                opacity: 1;
+                animation: avatarShine 2s ease-in-out infinite;
+            }
+            
+            @keyframes avatarShine {
+                0%, 100% { transform: rotate(0deg); }
+                50% { transform: rotate(180deg); }
+            }
+            
+            /* Responsive design for testimonials */
+            @media (max-width: 768px) {
+                .infinite-testimonials-container {
+                    height: 350px;
+                }
+                
+                .testimonial-card {
+                    width: 320px;
+                    padding: 1.5rem;
+                }
+                
+                .testimonial-card blockquote {
+                    font-size: 0.9rem;
+                    margin-bottom: 1rem;
+                }
+                
+                .testimonials-scroller {
+                    gap: 1rem;
+                    animation-duration: 30s;
+                }
+                
+                .testimonial-card blockquote::before {
+                    font-size: 2.5rem;
+                    top: -0.3rem;
+                    left: -0.3rem;
+                }
+            }
+            
+            /* Smooth scroll performance optimization */
+            .testimonials-scroller {
+                will-change: transform;
+                transform: translateZ(0);
+                backface-visibility: hidden;
+            }
+            
+            .testimonial-card {
+                will-change: transform, box-shadow;
+            }
+            
             .glass {
                 background: rgba(255, 255, 255, 0.1);
                 backdrop-filter: blur(10px);
@@ -227,6 +1796,27 @@ app.get('/', (c) => {
             
             .hover-lift {
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+
+            
+            .logo-text {
+                font-family: 'Inter', sans-serif;
+                font-size: 1.5rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+            
+            .logo-text .ia-highlight {
+                background: linear-gradient(135deg, #3b82f6, #60a5fa);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                font-weight: 600;
             }
             
             .hover-lift:hover {
@@ -334,6 +1924,280 @@ app.get('/', (c) => {
             ::-webkit-scrollbar-thumb:hover {
                 background: linear-gradient(135deg, #0891b2, #2563eb);
             }
+            
+            /* Custom Select Styles */
+            .service-select {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+            
+            .service-select option {
+                background-color: #1e293b;
+                color: white;
+                padding: 12px;
+                border: none;
+                transition: all 0.2s ease;
+            }
+            
+            .service-select option:hover {
+                background-color: #334155;
+                color: #06b6d4;
+            }
+            
+            .service-select option:checked {
+                background-color: #06b6d4;
+                color: white;
+            }
+            
+            /* AI Background Animation */
+            .ai-background {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                z-index: 1;
+            }
+            
+            .particle {
+                position: absolute;
+                width: 4px;
+                height: 4px;
+                background: linear-gradient(45deg, #06b6d4, #3b82f6);
+                border-radius: 50%;
+                opacity: 0.6;
+                animation: float-particles 20s linear infinite;
+            }
+            
+            .particle:nth-child(2n) {
+                background: linear-gradient(45deg, #8b5cf6, #06b6d4);
+                animation-duration: 25s;
+                animation-delay: -5s;
+            }
+            
+            .particle:nth-child(3n) {
+                background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+                animation-duration: 30s;
+                animation-delay: -10s;
+            }
+            
+            .particle:nth-child(4n) {
+                width: 3px;
+                height: 3px;
+                background: linear-gradient(45deg, #06b6d4, #10b981);
+                animation-duration: 35s;
+                animation-delay: -15s;
+            }
+            
+            .particle:nth-child(5n) {
+                width: 5px;
+                height: 5px;
+                background: linear-gradient(45deg, #3b82f6, #06b6d4);
+                animation-duration: 22s;
+                animation-delay: -8s;
+            }
+            
+            @keyframes float-particles {
+                0% {
+                    transform: translateY(100vh) translateX(0px) rotate(0deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 0.6;
+                }
+                90% {
+                    opacity: 0.6;
+                }
+                100% {
+                    transform: translateY(-100px) translateX(100px) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+            
+            .neural-network {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0.1;
+            }
+            
+            .neural-connection {
+                position: absolute;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+                animation: flow-data 3s linear infinite;
+            }
+            
+            @keyframes pulse-node {
+                0%, 100% {
+                    transform: scale(1);
+                    opacity: 0.5;
+                }
+                50% {
+                    transform: scale(1.5);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes flow-data {
+                0% {
+                    opacity: 0;
+                    transform: scaleX(0);
+                }
+                50% {
+                    opacity: 1;
+                    transform: scaleX(1);
+                }
+                100% {
+                    opacity: 0;
+                    transform: scaleX(0);
+                }
+            }
+            
+            .ai-waves {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0.08;
+                background: 
+                    radial-gradient(ellipse 800px 400px at 50% 0%, #06b6d4, transparent),
+                    radial-gradient(ellipse 600px 300px at 100% 50%, #3b82f6, transparent),
+                    radial-gradient(ellipse 700px 350px at 0% 100%, #8b5cf6, transparent);
+                transition: transform 0.15s ease-out;
+                will-change: transform;
+            }
+            
+            .neural-node {
+                position: absolute;
+                width: 8px;
+                height: 8px;
+                background: radial-gradient(circle, #06b6d4, #3b82f6);
+                border-radius: 50%;
+                animation: pulse-node 4s ease-in-out infinite;
+                transition: transform 0.1s ease-out;
+                will-change: transform;
+            }
+            
+            .particle {
+                position: absolute;
+                width: 4px;
+                height: 4px;
+                background: linear-gradient(45deg, #06b6d4, #3b82f6);
+                border-radius: 50%;
+                opacity: 0.6;
+                animation: float-particles 20s linear infinite;
+                transition: transform 0.2s ease-out;
+                will-change: transform;
+            }
+            
+            /* Cookie Banner Styles */
+            .cookie-banner {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #1e293b, #334155);
+                color: white;
+                padding: 20px;
+                box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+                backdrop-filter: blur(10px);
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                z-index: 9999;
+                transform: translateY(100%);
+                transition: transform 0.4s ease-in-out;
+            }
+            
+            .cookie-banner.show {
+                transform: translateY(0);
+            }
+            
+            .cookie-banner.hide {
+                transform: translateY(100%);
+            }
+            
+            .cookie-settings-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(8px);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                padding: 20px;
+            }
+            
+            .cookie-settings-modal.show {
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .cookie-settings-content {
+                background: white;
+                border-radius: 16px;
+                padding: 32px;
+                max-width: 600px;
+                width: 100%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+            }
+            
+            .toggle-switch {
+                position: relative;
+                display: inline-block;
+                width: 50px;
+                height: 24px;
+            }
+            
+            .toggle-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            
+            .toggle-slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #cbd5e1;
+                transition: .3s;
+                border-radius: 24px;
+            }
+            
+            .toggle-slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .3s;
+                border-radius: 50%;
+            }
+            
+            input:checked + .toggle-slider {
+                background-color: #06b6d4;
+            }
+            
+            input:checked + .toggle-slider:before {
+                transform: translateX(26px);
+            }
         </style>
     </head>
     <body class="font-inter bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800">
@@ -345,10 +2209,10 @@ app.get('/', (c) => {
                     <!-- Logo -->
                     <div class="flex items-center">
                         <a href="#home" class="flex items-center space-x-3 hover:scale-105 transition-transform duration-300">
-                            <div class="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-xl flex items-center justify-center animate-float">
-                                <i class="fas fa-robot text-white text-xl"></i>
+                            <div class="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center animate-float">
+                                <i class="fas fa-robot text-white text-lg"></i>
                             </div>
-                            <span class="text-2xl font-bold gradient-text">CanarIAgentic</span>
+                            <span class="logo-text">Canar<span class="ia-highlight">IA</span>gentic</span>
                         </a>
                     </div>
                     
@@ -388,19 +2252,454 @@ app.get('/', (c) => {
         
         <!-- Hero Section -->
         <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
-            <!-- Background Elements -->
-            <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent opacity-10"></div>
-            <div class="absolute top-20 right-20 w-72 h-72 bg-accent/20 rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-20 left-20 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-pulse-glow"></div>
             
-            <div class="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+            <!-- Hero Parallax Background -->
+            <div class="hero-parallax-container absolute inset-0 pointer-events-none">
+                <!-- First Row - AI Analytics & Data Visualization -->
+                <div class="parallax-row parallax-row-1">
+                    <!-- AI Performance Dashboard -->
+                    <div class="parallax-card ai-dashboard" data-title="AI Performance Analytics">
+                        <div class="card-content bg-gradient-to-br from-cyan-600 to-blue-800">
+                            <div class="card-header">
+                                <i class="fas fa-chart-line text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">AI Performance</h4>
+                            </div>
+                            <div class="ai-chart">
+                                <div class="chart-container">
+                                    <div class="chart-bar" style="height: 60%; animation-delay: 0s;"></div>
+                                    <div class="chart-bar" style="height: 85%; animation-delay: 0.2s;"></div>
+                                    <div class="chart-bar" style="height: 72%; animation-delay: 0.4s;"></div>
+                                    <div class="chart-bar" style="height: 95%; animation-delay: 0.6s;"></div>
+                                    <div class="chart-bar" style="height: 88%; animation-delay: 0.8s;"></div>
+                                </div>
+                                <div class="metrics-display">
+                                    <div class="metric">Accuracy: <span class="metric-value">98.7%</span></div>
+                                    <div class="metric">Speed: <span class="metric-value">2.3s</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Neural Network Visualization -->
+                    <div class="parallax-card neural-network" data-title="Neural Network Processing">
+                        <div class="card-content bg-gradient-to-br from-purple-600 to-indigo-800">
+                            <div class="card-header">
+                                <i class="fas fa-brain text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Neural Network</h4>
+                            </div>
+                            <div class="network-visualization">
+                                <div class="network-layer">
+                                    <div class="neuron active" style="animation-delay: 0s;"></div>
+                                    <div class="neuron active" style="animation-delay: 0.1s;"></div>
+                                    <div class="neuron" style="animation-delay: 0.2s;"></div>
+                                </div>
+                                <div class="network-layer">
+                                    <div class="neuron" style="animation-delay: 0.3s;"></div>
+                                    <div class="neuron active" style="animation-delay: 0.4s;"></div>
+                                    <div class="neuron active" style="animation-delay: 0.5s;"></div>
+                                    <div class="neuron" style="animation-delay: 0.6s;"></div>
+                                </div>
+                                <div class="network-layer">
+                                    <div class="neuron active" style="animation-delay: 0.7s;"></div>
+                                    <div class="neuron" style="animation-delay: 0.8s;"></div>
+                                </div>
+                                <div class="connections">
+                                    <div class="connection active" style="animation-delay: 0.9s;"></div>
+                                    <div class="connection" style="animation-delay: 1s;"></div>
+                                    <div class="connection active" style="animation-delay: 1.1s;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Machine Learning Model Training -->
+                    <div class="parallax-card ml-training" data-title="ML Model Training">
+                        <div class="card-content bg-gradient-to-br from-green-600 to-emerald-800">
+                            <div class="card-header">
+                                <i class="fas fa-cogs text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Model Training</h4>
+                            </div>
+                            <div class="training-progress">
+                                <div class="progress-ring">
+                                    <div class="progress-circle"></div>
+                                    <div class="progress-text">87%</div>
+                                </div>
+                                <div class="training-stats">
+                                    <div class="stat-item">Epoch: <span>247/300</span></div>
+                                    <div class="stat-item">Loss: <span>0.0023</span></div>
+                                    <div class="stat-item">ETA: <span>12min</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Processing Pipeline -->
+                    <div class="parallax-card data-pipeline" data-title="Data Processing Pipeline">
+                        <div class="card-content bg-gradient-to-br from-orange-600 to-red-800">
+                            <div class="card-header">
+                                <i class="fas fa-stream text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Data Pipeline</h4>
+                            </div>
+                            <div class="pipeline-flow">
+                                <div class="pipeline-step">
+                                    <div class="step-node active">Raw Data</div>
+                                    <div class="flow-arrow active"></div>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-node processing">Processing</div>
+                                    <div class="flow-arrow"></div>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-node">AI Model</div>
+                                    <div class="flow-arrow"></div>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-node">Insights</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Agent Interface -->
+                    <div class="parallax-card ai-agent" data-title="AI Agent Interface">
+                        <div class="card-content bg-gradient-to-br from-violet-600 to-purple-800">
+                            <div class="card-header">
+                                <i class="fas fa-robot text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">AI Agent</h4>
+                            </div>
+                            <div class="agent-interface">
+                                <div class="agent-avatar">
+                                    <div class="avatar-core pulsing"></div>
+                                    <div class="avatar-ring"></div>
+                                </div>
+                                <div class="agent-status">
+                                    <div class="status-indicator active"></div>
+                                    <div class="status-text">Active</div>
+                                </div>
+                                <div class="agent-metrics">
+                                    <div class="metric-bar">
+                                        <div class="metric-fill" style="width: 92%;"></div>
+                                    </div>
+                                    <div class="metric-label">Efficiency: 92%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Second Row - Automation & Consulting -->
+                <div class="parallax-row parallax-row-2">
+                    <!-- Business Process Automation -->
+                    <div class="parallax-card automation-flow" data-title="Process Automation">
+                        <div class="card-content bg-gradient-to-br from-teal-600 to-cyan-800">
+                            <div class="card-header">
+                                <i class="fas fa-magic text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Automation</h4>
+                            </div>
+                            <div class="automation-diagram">
+                                <div class="workflow-step">
+                                    <div class="step-icon">📊</div>
+                                    <div class="step-arrow active"></div>
+                                </div>
+                                <div class="workflow-step">
+                                    <div class="step-icon processing">🤖</div>
+                                    <div class="step-arrow"></div>
+                                </div>
+                                <div class="workflow-step">
+                                    <div class="step-icon">✅</div>
+                                </div>
+                                <div class="automation-stats">
+                                    <div class="stat">↑ 340% Efficiency</div>
+                                    <div class="stat">↓ 89% Time Saved</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Strategic Consulting Dashboard -->
+                    <div class="parallax-card consulting-dashboard" data-title="Strategic Analysis">
+                        <div class="card-content bg-gradient-to-br from-amber-600 to-orange-800">
+                            <div class="card-header">
+                                <i class="fas fa-lightbulb text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Strategy</h4>
+                            </div>
+                            <div class="strategy-analysis">
+                                <div class="analysis-grid">
+                                    <div class="analysis-box">
+                                        <div class="box-value">$2.4M</div>
+                                        <div class="box-label">ROI Projected</div>
+                                    </div>
+                                    <div class="analysis-box">
+                                        <div class="box-value">67%</div>
+                                        <div class="box-label">Cost Reduction</div>
+                                    </div>
+                                </div>
+                                <div class="recommendation-panel">
+                                    <div class="rec-item active">✓ Implement AI Chatbots</div>
+                                    <div class="rec-item">◦ Automate Data Entry</div>
+                                    <div class="rec-item">◦ ML Predictive Analytics</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Training Platform -->
+                    <div class="parallax-card training-platform" data-title="AI Training Platform">
+                        <div class="card-content bg-gradient-to-br from-blue-600 to-indigo-800">
+                            <div class="card-header">
+                                <i class="fas fa-graduation-cap text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Training</h4>
+                            </div>
+                            <div class="training-interface">
+                                <div class="course-progress">
+                                    <div class="course-item completed">
+                                        <div class="course-dot"></div>
+                                        <div class="course-name">AI Fundamentals</div>
+                                    </div>
+                                    <div class="course-item active">
+                                        <div class="course-dot"></div>
+                                        <div class="course-name">Machine Learning</div>
+                                    </div>
+                                    <div class="course-item">
+                                        <div class="course-dot"></div>
+                                        <div class="course-name">Deep Learning</div>
+                                    </div>
+                                </div>
+                                <div class="skill-meter">
+                                    <div class="skill-bar">
+                                        <div class="skill-fill" style="width: 78%;"></div>
+                                    </div>
+                                    <div class="skill-text">AI Proficiency: 78%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Predictive Analytics -->
+                    <div class="parallax-card predictive-analytics" data-title="Predictive Analytics">
+                        <div class="card-content bg-gradient-to-br from-emerald-600 to-green-800">
+                            <div class="card-header">
+                                <i class="fas fa-chart-area text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Predictions</h4>
+                            </div>
+                            <div class="prediction-charts">
+                                <div class="trend-line">
+                                    <div class="data-points">
+                                        <div class="point" style="left: 10%; bottom: 30%;"></div>
+                                        <div class="point" style="left: 25%; bottom: 45%;"></div>
+                                        <div class="point active" style="left: 40%; bottom: 60%;"></div>
+                                        <div class="point prediction" style="left: 55%; bottom: 75%;"></div>
+                                        <div class="point prediction" style="left: 70%; bottom: 85%;"></div>
+                                    </div>
+                                </div>
+                                <div class="forecast-info">
+                                    <div class="forecast-item">Next Quarter: ↗ +23%</div>
+                                    <div class="forecast-item">Confidence: 94.2%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- NLP & Text Analysis -->
+                    <div class="parallax-card nlp-analysis" data-title="Natural Language Processing">
+                        <div class="card-content bg-gradient-to-br from-rose-600 to-pink-800">
+                            <div class="card-header">
+                                <i class="fas fa-comments text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">NLP Engine</h4>
+                            </div>
+                            <div class="nlp-interface">
+                                <div class="text-analysis">
+                                    <div class="analysis-bubble positive">
+                                        Sentiment: Positive 😊
+                                    </div>
+                                    <div class="analysis-bubble neutral">
+                                        Intent: Product Inquiry
+                                    </div>
+                                    <div class="analysis-bubble processing">
+                                        Processing response...
+                                    </div>
+                                </div>
+                                <div class="nlp-metrics">
+                                    <div class="metric-circle">
+                                        <div class="circle-progress" style="--progress: 89"></div>
+                                        <div class="circle-text">89%</div>
+                                    </div>
+                                    <div class="metric-label">Accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Third Row - Advanced AI & Technology -->
+                <div class="parallax-row parallax-row-3">
+                    <!-- Computer Vision System -->
+                    <div class="parallax-card computer-vision" data-title="Computer Vision AI">
+                        <div class="card-content bg-gradient-to-br from-indigo-600 to-purple-800">
+                            <div class="card-header">
+                                <i class="fas fa-eye text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Computer Vision</h4>
+                            </div>
+                            <div class="vision-interface">
+                                <div class="detection-grid">
+                                    <div class="detection-box active">
+                                        <div class="box-outline"></div>
+                                        <div class="detection-label">Object: 97%</div>
+                                    </div>
+                                    <div class="detection-box">
+                                        <div class="box-outline"></div>
+                                        <div class="detection-label">Face: 94%</div>
+                                    </div>
+                                </div>
+                                <div class="vision-stats">
+                                    <div class="stat-row">FPS: <span>30</span></div>
+                                    <div class="stat-row">Accuracy: <span>96.8%</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Deep Learning Model -->
+                    <div class="parallax-card deep-learning" data-title="Deep Learning Architecture">
+                        <div class="card-content bg-gradient-to-br from-violet-600 to-indigo-800">
+                            <div class="card-header">
+                                <i class="fas fa-project-diagram text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Deep Learning</h4>
+                            </div>
+                            <div class="dl-architecture">
+                                <div class="layer-stack">
+                                    <div class="dl-layer input">Input Layer</div>
+                                    <div class="dl-layer hidden active">Hidden Layer 1</div>
+                                    <div class="dl-layer hidden">Hidden Layer 2</div>
+                                    <div class="dl-layer output">Output Layer</div>
+                                </div>
+                                <div class="dl-info">
+                                    <div class="info-item">Layers: 4</div>
+                                    <div class="info-item">Neurons: 2,048</div>
+                                    <div class="info-item">Weights: 1.2M</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Real-time Analytics -->
+                    <div class="parallax-card realtime-analytics" data-title="Real-time Analytics">
+                        <div class="card-content bg-gradient-to-br from-emerald-600 to-teal-800">
+                            <div class="card-header">
+                                <i class="fas fa-tachometer-alt text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Real-time Data</h4>
+                            </div>
+                            <div class="realtime-dashboard">
+                                <div class="live-chart">
+                                    <div class="chart-line">
+                                        <div class="line-segment" style="height: 40%; animation-delay: 0s;"></div>
+                                        <div class="line-segment" style="height: 65%; animation-delay: 0.1s;"></div>
+                                        <div class="line-segment" style="height: 55%; animation-delay: 0.2s;"></div>
+                                        <div class="line-segment" style="height: 80%; animation-delay: 0.3s;"></div>
+                                        <div class="line-segment" style="height: 70%; animation-delay: 0.4s;"></div>
+                                    </div>
+                                </div>
+                                <div class="live-metrics">
+                                    <div class="live-value">
+                                        <span class="value-number">1,247</span>
+                                        <span class="value-label">Events/sec</span>
+                                    </div>
+                                    <div class="status-indicator live"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI-Powered Search -->
+                    <div class="parallax-card ai-search" data-title="AI-Powered Search">
+                        <div class="card-content bg-gradient-to-br from-cyan-600 to-blue-800">
+                            <div class="card-header">
+                                <i class="fas fa-search text-white text-3xl mb-3"></i>
+                                <h4 class="text-white text-sm font-bold">Smart Search</h4>
+                            </div>
+                            <div class="search-interface">
+                                <div class="search-query">
+                                    <div class="query-text">"Find similar products..."</div>
+                                    <div class="search-spinner"></div>
+                                </div>
+                                <div class="search-results">
+                                    <div class="result-item">
+                                        <div class="result-score">98%</div>
+                                        <div class="result-text">Product A</div>
+                                    </div>
+                                    <div class="result-item">
+                                        <div class="result-score">94%</div>
+                                        <div class="result-text">Product B</div>
+                                    </div>
+                                    <div class="result-item">
+                                        <div class="result-score">87%</div>
+                                        <div class="result-text">Product C</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Animated Background (maintained but with lower opacity) -->
+            <div class="ai-background opacity-30">
+                <!-- AI Waves -->
+                <div class="ai-waves"></div>
+                
+                <!-- Neural Network -->
+                <div class="neural-network">
+                    <!-- Neural Nodes -->
+                    <div class="neural-node" style="top: 20%; left: 15%; animation-delay: 0s;"></div>
+                    <div class="neural-node" style="top: 30%; left: 25%; animation-delay: 0.5s;"></div>
+                    <div class="neural-node" style="top: 40%; left: 35%; animation-delay: 1s;"></div>
+                    <div class="neural-node" style="top: 60%; left: 45%; animation-delay: 1.5s;"></div>
+                    <div class="neural-node" style="top: 70%; left: 55%; animation-delay: 2s;"></div>
+                    <div class="neural-node" style="top: 25%; left: 65%; animation-delay: 0.3s;"></div>
+                    <div class="neural-node" style="top: 45%; left: 75%; animation-delay: 0.8s;"></div>
+                    <div class="neural-node" style="top: 15%; left: 85%; animation-delay: 1.3s;"></div>
+                    
+                    <!-- Neural Connections -->
+                    <div class="neural-connection" style="top: 25%; left: 15%; width: 120px; transform: rotate(25deg); animation-delay: 0.2s;"></div>
+                    <div class="neural-connection" style="top: 35%; left: 25%; width: 140px; transform: rotate(-15deg); animation-delay: 0.7s;"></div>
+                    <div class="neural-connection" style="top: 50%; left: 35%; width: 130px; transform: rotate(45deg); animation-delay: 1.2s;"></div>
+                    <div class="neural-connection" style="top: 65%; left: 45%; width: 110px; transform: rotate(-30deg); animation-delay: 1.7s;"></div>
+                    <div class="neural-connection" style="top: 30%; left: 55%; width: 150px; transform: rotate(60deg); animation-delay: 0.4s;"></div>
+                    <div class="neural-connection" style="top: 40%; left: 65%; width: 125px; transform: rotate(-45deg); animation-delay: 0.9s;"></div>
+                </div>
+                
+                <!-- Floating Particles -->
+                <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+                <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+                <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+                <div class="particle" style="left: 40%; animation-delay: 6s;"></div>
+                <div class="particle" style="left: 50%; animation-delay: 8s;"></div>
+                <div class="particle" style="left: 60%; animation-delay: 10s;"></div>
+                <div class="particle" style="left: 70%; animation-delay: 12s;"></div>
+                <div class="particle" style="left: 80%; animation-delay: 14s;"></div>
+                <div class="particle" style="left: 90%; animation-delay: 16s;"></div>
+                <div class="particle" style="left: 15%; animation-delay: 1s;"></div>
+                <div class="particle" style="left: 35%; animation-delay: 3s;"></div>
+                <div class="particle" style="left: 55%; animation-delay: 5s;"></div>
+                <div class="particle" style="left: 75%; animation-delay: 7s;"></div>
+                <div class="particle" style="left: 85%; animation-delay: 9s;"></div>
+                <div class="particle" style="left: 25%; animation-delay: 11s;"></div>
+            </div>
+            
+            <!-- Original Background Elements -->
+            <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent opacity-5"></div>
+            <div class="absolute top-20 right-20 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-glow"></div>
+            
+            <!-- Hero Content - Positioned over parallax -->
+            <div class="hero-content relative z-20 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
                 <div class="animate-fade-in">
                     <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
                         Transformando Empresas con
                         <span class="gradient-text block mt-2">Inteligencia Artificial</span>
                     </h1>
                     <p class="text-xl md:text-2xl text-slate-600 mb-10 max-w-4xl mx-auto leading-relaxed">
-                        CanarIAgentic es la agencia líder en soluciones de IA que impulsa la innovación y eficiencia empresarial a través de tecnología vanguardista y estrategias personalizadas.
+                        CanarIAgentic es tu partner en soluciones de IA que impulsa la innovación y eficiencia empresarial a través de tecnología vanguardista y estrategias personalizadas.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
                         <a href="#contact" class="btn-gradient text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center space-x-3 hover-lift">
@@ -437,7 +2736,7 @@ app.get('/', (c) => {
                 
                 <div class="grid lg:grid-cols-3 gap-8">
                     <!-- Pillar 1: Formación -->
-                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
                         <div class="text-center mb-6">
                             <div class="w-20 h-20 bg-gradient-to-br from-accent to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-float">
                                 <i class="fas fa-graduation-cap text-white text-3xl"></i>
@@ -447,7 +2746,7 @@ app.get('/', (c) => {
                         <p class="text-slate-600 mb-6 leading-relaxed">
                             Desarrollamos programas de capacitación a medida para que tu equipo domine las herramientas y conceptos de inteligencia artificial más avanzados.
                         </p>
-                        <ul class="space-y-3 mb-8">
+                        <ul class="space-y-3 mb-8 flex-grow">
                             <li class="flex items-start space-x-3">
                                 <i class="fas fa-check-circle text-green-500 mt-1"></i>
                                 <span class="text-slate-600">Diagnóstico inicial de competencias digitales</span>
@@ -465,13 +2764,13 @@ app.get('/', (c) => {
                                 <span class="text-slate-600">Acompañamiento en implementación</span>
                             </li>
                         </ul>
-                        <button onclick="openModal('formacion')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition-colors">
+                        <button onclick="openModal('formacion')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition-colors mt-auto">
                             <i class="fas fa-eye mr-2"></i>Ver Detalles
                         </button>
                     </div>
                     
                     <!-- Pillar 2: Consultoría -->
-                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
                         <div class="text-center mb-6">
                             <div class="w-20 h-20 bg-gradient-to-br from-secondary to-accent rounded-2xl flex items-center justify-center mx-auto mb-6 animate-float" style="animation-delay: 0.2s;">
                                 <i class="fas fa-lightbulb text-white text-3xl"></i>
@@ -481,7 +2780,7 @@ app.get('/', (c) => {
                         <p class="text-slate-600 mb-6 leading-relaxed">
                             Ayudamos a las empresas a identificar oportunidades de mejora e innovación mediante el análisis estratégico con inteligencia artificial.
                         </p>
-                        <ul class="space-y-3 mb-8">
+                        <ul class="space-y-3 mb-8 flex-grow">
                             <li class="flex items-start space-x-3">
                                 <i class="fas fa-check-circle text-green-500 mt-1"></i>
                                 <span class="text-slate-600">Análisis de madurez digital y de IA</span>
@@ -499,13 +2798,13 @@ app.get('/', (c) => {
                                 <span class="text-slate-600">Evaluación de tecnologías y proveedores</span>
                             </li>
                         </ul>
-                        <button onclick="openModal('consultoria')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition-colors">
+                        <button onclick="openModal('consultoria')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition-colors mt-auto">
                             <i class="fas fa-eye mr-2"></i>Ver Detalles
                         </button>
                     </div>
                     
                     <!-- Pillar 3: Agentes -->
-                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
                         <div class="text-center mb-6">
                             <div class="w-20 h-20 bg-gradient-to-br from-accent to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-float" style="animation-delay: 0.4s;">
                                 <i class="fas fa-cogs text-white text-3xl"></i>
@@ -515,7 +2814,7 @@ app.get('/', (c) => {
                         <p class="text-slate-600 mb-6 leading-relaxed">
                             Diseñamos e implementamos agentes inteligentes que automatizan y optimizan los procesos empresariales de manera eficiente.
                         </p>
-                        <ul class="space-y-3 mb-8">
+                        <ul class="space-y-3 mb-8 flex-grow">
                             <li class="flex items-start space-x-3">
                                 <i class="fas fa-check-circle text-green-500 mt-1"></i>
                                 <span class="text-slate-600">Análisis y modelado de procesos</span>
@@ -533,7 +2832,7 @@ app.get('/', (c) => {
                                 <span class="text-slate-600">Integración con sistemas existentes</span>
                             </li>
                         </ul>
-                        <a href="https://studio.pickaxe.co/STUDIOD9VCTFILPI7W0YP" target="_blank" class="w-full bg-gradient-to-r from-accent to-secondary text-white py-3 rounded-xl font-medium transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center">
+                        <a href="https://studio.pickaxe.co/STUDIOD9VCTFILPI7W0YP" target="_blank" class="w-full bg-gradient-to-r from-accent to-secondary text-white py-3 rounded-xl font-medium transition-all hover:shadow-lg hover:-translate-y-1 flex items-center justify-center mt-auto">
                             <i class="fas fa-external-link-alt mr-2"></i>Ver Demostración
                         </a>
                     </div>
@@ -553,18 +2852,18 @@ app.get('/', (c) => {
                     </p>
                 </div>
                 
-                <div class="grid lg:grid-cols-3 gap-8">
+                <div class="services-grid grid lg:grid-cols-2 xl:grid-cols-4 gap-8">
                     <!-- Service 1 -->
-                    <div class="section-fade-in bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 hover-lift">
+                    <div class="service-card-3d section-fade-in bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 hover-lift flex flex-col h-full">
                         <div class="h-48 bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                             <i class="fas fa-chalkboard-teacher text-white text-6xl"></i>
                         </div>
-                        <div class="p-8">
+                        <div class="p-8 flex flex-col flex-grow">
                             <h3 class="text-2xl font-bold text-slate-800 mb-4">Formación en IA</h3>
-                            <p class="text-slate-600 mb-6 leading-relaxed">
+                            <p class="text-slate-600 mb-6 leading-relaxed flex-grow">
                                 Programas de capacitación personalizados para que tu equipo domine las herramientas y conceptos de inteligencia artificial más relevantes.
                             </p>
-                            <a href="#contact" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2 hover-lift">
+                            <a href="#contact" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2 hover-lift mt-auto">
                                 <i class="fas fa-info"></i>
                                 <span>Más Información</span>
                             </a>
@@ -572,16 +2871,16 @@ app.get('/', (c) => {
                     </div>
                     
                     <!-- Service 2 -->
-                    <div class="section-fade-in bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 hover-lift">
+                    <div class="service-card-3d section-fade-in bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 hover-lift flex flex-col h-full">
                         <div class="h-48 bg-gradient-to-br from-secondary to-accent flex items-center justify-center">
                             <i class="fas fa-chart-line text-white text-6xl"></i>
                         </div>
-                        <div class="p-8">
+                        <div class="p-8 flex flex-col flex-grow">
                             <h3 class="text-2xl font-bold text-slate-800 mb-4">Consultoría de IA</h3>
-                            <p class="text-slate-600 mb-6 leading-relaxed">
+                            <p class="text-slate-600 mb-6 leading-relaxed flex-grow">
                                 Análisis estratégico para identificar oportunidades de mejora e innovación mediante la implementación de inteligencia artificial.
                             </p>
-                            <a href="#contact" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2 hover-lift">
+                            <a href="#contact" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2 hover-lift mt-auto">
                                 <i class="fas fa-info"></i>
                                 <span>Más Información</span>
                             </a>
@@ -589,18 +2888,35 @@ app.get('/', (c) => {
                     </div>
                     
                     <!-- Service 3 -->
-                    <div class="section-fade-in bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 hover-lift">
+                    <div class="service-card-3d section-fade-in bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 hover-lift flex flex-col h-full">
                         <div class="h-48 bg-gradient-to-br from-accent to-primary flex items-center justify-center">
                             <i class="fas fa-robot text-white text-6xl"></i>
                         </div>
-                        <div class="p-8">
+                        <div class="p-8 flex flex-col flex-grow">
                             <h3 class="text-2xl font-bold text-slate-800 mb-4">Desarrollo de Agentes IA</h3>
-                            <p class="text-slate-600 mb-6 leading-relaxed">
+                            <p class="text-slate-600 mb-6 leading-relaxed flex-grow">
                                 Creación e implementación de agentes inteligentes que automatizan y optimizan los procesos empresariales de forma efectiva.
                             </p>
-                            <a href="https://studio.pickaxe.co/STUDIOD9VCTFILPI7W0YP" target="_blank" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2 hover-lift">
+                            <a href="https://studio.pickaxe.co/STUDIOD9VCTFILPI7W0YP" target="_blank" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2 hover-lift mt-auto">
                                 <i class="fas fa-external-link-alt"></i>
                                 <span>Ver Demostración</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Service 4 - Páginas Web y Marketing Digital -->
+                    <div class="service-card-3d section-fade-in bg-white rounded-2xl overflow-hidden shadow-lg border border-slate-200 hover-lift flex flex-col h-full">
+                        <div class="h-48 bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
+                            <i class="fas fa-globe-europe text-white text-6xl"></i>
+                        </div>
+                        <div class="p-8 flex flex-col flex-grow">
+                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Páginas Web y Marketing Digital IA</h3>
+                            <p class="text-slate-600 mb-6 leading-relaxed flex-grow">
+                                Diseñamos sitios web modernos optimizados con SEO y campañas de marketing digital impulsadas por IA para maximizar tu presencia online y conversiones.
+                            </p>
+                            <a href="#contact" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2 hover-lift mt-auto">
+                                <i class="fas fa-info"></i>
+                                <span>Más Información</span>
                             </a>
                         </div>
                     </div>
@@ -620,72 +2936,126 @@ app.get('/', (c) => {
                     </p>
                 </div>
                 
-                <div class="grid lg:grid-cols-3 gap-8">
-                    <!-- Testimonial 1 -->
-                    <div class="section-fade-in bg-white rounded-2xl p-8 shadow-lg border border-slate-200 hover-lift">
-                        <div class="flex items-center text-yellow-400 mb-4">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <p class="text-slate-600 mb-6 italic leading-relaxed">
-                            "La formación en IA que recibimos de CanarIAgentic transformó completamente nuestros procesos. Ahora somos 40% más eficientes en análisis de datos."
-                        </p>
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center text-white font-bold mr-4">
-                                MR
+                <!-- Infinite Moving Testimonials -->
+                <div class="infinite-testimonials-container relative overflow-hidden">
+                    <div class="testimonials-scroller" id="testimonialsScroller">
+                        <!-- Testimonial 1 -->
+                        <div class="testimonial-card">
+                            <div class="card-glow"></div>
+                            <div class="flex items-center text-yellow-400 mb-4">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
                             </div>
-                            <div>
-                                <h4 class="font-semibold text-slate-800">María Rodríguez</h4>
-                                <p class="text-slate-500">CEO, TechCorp Canarias</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Testimonial 2 -->
-                    <div class="section-fade-in bg-white rounded-2xl p-8 shadow-lg border border-slate-200 hover-lift">
-                        <div class="flex items-center text-yellow-400 mb-4">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <p class="text-slate-600 mb-6 italic leading-relaxed">
-                            "Los agentes IA desarrollados por CanarIAgentic han automatizado nuestro servicio al cliente. Reducimos tiempos de respuesta en un 60%."
-                        </p>
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-secondary to-accent rounded-full flex items-center justify-center text-white font-bold mr-4">
-                                CL
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-slate-800">Carlos López</h4>
-                                <p class="text-slate-500">Director IT, Innovación S.L.</p>
+                            <blockquote class="text-slate-600 mb-6 italic leading-relaxed">
+                                "La formación en IA que recibimos de CanarIAgentic transformó completamente nuestros procesos. Ahora somos 40% más eficientes en análisis de datos y hemos implementado 3 nuevos modelos predictivos."
+                            </blockquote>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    MR
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">María Rodríguez</h4>
+                                    <p class="text-slate-500">CEO, TechCorp Canarias</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Testimonial 3 -->
-                    <div class="section-fade-in bg-white rounded-2xl p-8 shadow-lg border border-slate-200 hover-lift">
-                        <div class="flex items-center text-yellow-400 mb-4">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <p class="text-slate-600 mb-6 italic leading-relaxed">
-                            "La consultoría estratégica nos ayudó a identificar oportunidades que no veíamos. ROI positivo en solo 3 meses."
-                        </p>
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center text-white font-bold mr-4">
-                                AG
+                        
+                        <!-- Testimonial 2 -->
+                        <div class="testimonial-card">
+                            <div class="card-glow"></div>
+                            <div class="flex items-center text-yellow-400 mb-4">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
                             </div>
-                            <div>
-                                <h4 class="font-semibold text-slate-800">Ana García</h4>
-                                <p class="text-slate-500">COO, Digital Solutions</p>
+                            <blockquote class="text-slate-600 mb-6 italic leading-relaxed">
+                                "Los agentes IA desarrollados por CanarIAgentic han automatizado nuestro servicio al cliente. Reducimos tiempos de respuesta en un 60% y mejoramos la satisfacción del cliente significativamente."
+                            </blockquote>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-secondary to-accent rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    CL
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Carlos López</h4>
+                                    <p class="text-slate-500">Director IT, Innovación S.L.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Testimonial 3 -->
+                        <div class="testimonial-card">
+                            <div class="card-glow"></div>
+                            <div class="flex items-center text-yellow-400 mb-4">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <blockquote class="text-slate-600 mb-6 italic leading-relaxed">
+                                "La consultoría estratégica nos ayudó a identificar oportunidades que no veíamos. ROI positivo en solo 3 meses. Su expertise en IA transformó nuestra visión de negocio."
+                            </blockquote>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    AG
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Ana García</h4>
+                                    <p class="text-slate-500">COO, Digital Solutions</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Testimonial 4 - Additional -->
+                        <div class="testimonial-card">
+                            <div class="card-glow"></div>
+                            <div class="flex items-center text-yellow-400 mb-4">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <blockquote class="text-slate-600 mb-6 italic leading-relaxed">
+                                "El desarrollo de nuestro chatbot inteligente superó todas las expectativas. Procesamos 10x más consultas con mayor precisión. CanarIAgentic entiende perfectamente las necesidades empresariales."
+                            </blockquote>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    JS
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Javier Santana</h4>
+                                    <p class="text-slate-500">CTO, StartupTech Canarias</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Testimonial 5 - Additional -->
+                        <div class="testimonial-card">
+                            <div class="card-glow"></div>
+                            <div class="flex items-center text-yellow-400 mb-4">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <blockquote class="text-slate-600 mb-6 italic leading-relaxed">
+                                "La implementación de machine learning en nuestros procesos de manufacturing redujo defectos en un 85%. El equipo de CanarIAgentic demostró un conocimiento técnico excepcional."
+                            </blockquote>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    LM
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Laura Martín</h4>
+                                    <p class="text-slate-500">Directora Operaciones, Manufactura Plus</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -730,7 +3100,7 @@ app.get('/', (c) => {
                                 </div>
                                 <div>
                                     <h4 class="font-semibold">Teléfono</h4>
-                                    <p class="opacity-80">+34 922 150 801</p>
+                                    <p class="opacity-80">+34 649 823 612</p>
                                 </div>
                             </div>
                             
@@ -777,11 +3147,12 @@ app.get('/', (c) => {
                             
                             <div>
                                 <label class="block text-white font-medium mb-2">Servicio de Interés</label>
-                                <select name="service" class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:border-accent focus:outline-none transition-colors">
+                                <select name="service" class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white focus:border-accent focus:outline-none transition-colors service-select">
                                     <option value="">Seleccionar servicio</option>
                                     <option value="formacion">Formación en IA</option>
                                     <option value="consultoria">Consultoría de IA</option>
                                     <option value="agentes">Desarrollo de Agentes IA</option>
+                                    <option value="webmarketing">Páginas Web y Marketing Digital IA</option>
                                     <option value="todo">Todos los servicios</option>
                                 </select>
                             </div>
@@ -809,17 +3180,17 @@ app.get('/', (c) => {
         <!-- Footer -->
         <footer class="bg-slate-900 text-white py-16">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid lg:grid-cols-4 gap-8">
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <!-- Company Info -->
-                    <div class="lg:col-span-2">
+                    <div>
                         <div class="flex items-center space-x-3 mb-6">
-                            <div class="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-xl flex items-center justify-center">
-                                <i class="fas fa-robot text-white text-xl"></i>
+                            <div class="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center animate-float">
+                                <i class="fas fa-robot text-white text-lg"></i>
                             </div>
-                            <span class="text-2xl font-bold gradient-text">CanarIAgentic</span>
+                            <span class="text-2xl font-bold text-white">Canar<span class="text-accent">IA</span>gentic</span>
                         </div>
                         <p class="text-slate-400 mb-6 leading-relaxed">
-                            Somos la agencia líder en Canarias especializada en soluciones de inteligencia artificial para empresas. 
+                            Somos una agencia canaria especializada en soluciones de inteligencia artificial para empresas. 
                             Transformamos negocios a través de la innovación tecnológica.
                         </p>
                         <div class="flex space-x-4">
@@ -854,14 +3225,34 @@ app.get('/', (c) => {
                             <li><a href="#services" class="text-slate-400 hover:text-white transition-colors">Formación en IA</a></li>
                             <li><a href="#services" class="text-slate-400 hover:text-white transition-colors">Consultoría</a></li>
                             <li><a href="#services" class="text-slate-400 hover:text-white transition-colors">Agentes IA</a></li>
+                            <li><a href="#services" class="text-slate-400 hover:text-white transition-colors">Web y Marketing IA</a></li>
                             <li><a href="https://studio.pickaxe.co/STUDIOD9VCTFILPI7W0YP" target="_blank" class="text-slate-400 hover:text-white transition-colors">Demo Agentes</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Legal -->
+                    <div>
+                        <h4 class="text-xl font-semibold mb-6">Legal</h4>
+                        <ul class="space-y-3">
+                            <li><a href="#" onclick="showPrivacyPolicy()" class="text-slate-400 hover:text-white transition-colors">Política de Privacidad</a></li>
+                            <li><a href="#" onclick="showCookiePolicy()" class="text-slate-400 hover:text-white transition-colors">Política de Cookies</a></li>
+                            <li><a href="#" onclick="showTermsOfService()" class="text-slate-400 hover:text-white transition-colors">Términos de Servicio</a></li>
+                            <li><a href="#" onclick="cookieManager.showSettings()" class="text-slate-400 hover:text-white transition-colors">Configurar Cookies</a></li>
+                            <li><a href="#contact" class="text-slate-400 hover:text-white transition-colors">Contacto Legal</a></li>
                         </ul>
                     </div>
                 </div>
                 
                 <!-- Bottom -->
-                <div class="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400">
-                    <p>&copy; 2024 CanarIAgentic. Todos los derechos reservados. Hecho con ❤️ en Canarias.</p>
+                <div class="border-t border-slate-800 mt-12 pt-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center">
+                        <p class="text-slate-400 mb-4 md:mb-0">&copy; 2024 CanarIAgentic. Todos los derechos reservados. Hecho con ❤️ en Canarias.</p>
+                        <div class="flex space-x-4 text-sm">
+                            <a href="#" onclick="showPrivacyPolicy()" class="text-slate-500 hover:text-slate-300 transition-colors">Privacidad</a>
+                            <a href="#" onclick="showCookiePolicy()" class="text-slate-500 hover:text-slate-300 transition-colors">Cookies</a>
+                            <a href="#" onclick="showTermsOfService()" class="text-slate-500 hover:text-slate-300 transition-colors">Términos</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </footer>
@@ -1297,7 +3688,1038 @@ app.get('/', (c) => {
             document.querySelectorAll('[id$="-modal"]').forEach(modal => {
                 trapFocus(modal);
             });
+            
+            // AI Waves Mouse Interaction
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetX = 0;
+            let targetY = 0;
+            
+            // Track mouse movement
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth) * 100;
+                mouseY = (e.clientY / window.innerHeight) * 100;
+            });
+            
+            // Smooth animation function
+            function animateWaves() {
+                // Smooth interpolation
+                targetX += (mouseX - targetX) * 0.05;
+                targetY += (mouseY - targetY) * 0.05;
+                
+                const aiWaves = document.querySelector('.ai-waves');
+                if (aiWaves) {
+                    // Calculate transform based on mouse position
+                    const translateX = (targetX - 50) * 0.5;  // Reduced movement intensity
+                    const translateY = (targetY - 50) * 0.5;
+                    const rotation = (targetX - 50) * 0.02;   // Subtle rotation
+                    const scale = 1 + ((targetX + targetY) / 200) * 0.1; // Subtle scale
+                    
+                    aiWaves.style.transform = \`translateX(\${translateX}px) translateY(\${translateY}px) rotate(\${rotation}deg) scale(\${scale})\`;
+                }
+                
+                // Also animate neural network nodes
+                const neuralNodes = document.querySelectorAll('.neural-node');
+                neuralNodes.forEach((node, index) => {
+                    const delay = index * 0.1;
+                    const offsetX = Math.sin((targetX + delay) * 0.02) * 2;
+                    const offsetY = Math.cos((targetY + delay) * 0.02) * 2;
+                    
+                    node.style.transform = \`translate(\${offsetX}px, \${offsetY}px) scale(\${1 + Math.sin((targetX + targetY + delay) * 0.01) * 0.2})\`;
+                });
+                
+                // Animate neural connections
+                const neuralConnections = document.querySelectorAll('.neural-connection');
+                neuralConnections.forEach((connection, index) => {
+                    const intensity = 0.5 + (Math.sin((targetX + targetY + index * 10) * 0.02) * 0.5);
+                    connection.style.opacity = intensity * 0.3;  // Keep it subtle
+                });
+                
+                // Continue animation
+                requestAnimationFrame(animateWaves);
+            }
+            
+            // Start the animation
+            animateWaves();
+            
+            // Add mouse interaction to particles
+            const particles = document.querySelectorAll('.particle');
+            document.addEventListener('mousemove', (e) => {
+                particles.forEach((particle, index) => {
+                    const rect = particle.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    const deltaX = e.clientX - centerX;
+                    const deltaY = e.clientY - centerY;
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    
+                    // Repel particles when mouse is near (within 100px)
+                    if (distance < 100) {
+                        const force = (100 - distance) / 100;
+                        const pushX = (deltaX / distance) * force * -20;
+                        const pushY = (deltaY / distance) * force * -20;
+                        
+                        particle.style.transform = \`translate(\${pushX}px, \${pushY}px) scale(\${1 + force * 0.5})\`;
+                    } else {
+                        particle.style.transform = 'translate(0px, 0px) scale(1)';
+                    }
+                });
+            });
+        
+        // Cookie Management System
+        class CookieManager {
+            constructor() {
+                this.cookieSettings = {
+                    necessary: true,
+                    analytics: false,
+                    marketing: false,
+                    functional: false
+                };
+                this.init();
+            }
+            
+            init() {
+                this.loadCookieSettings();
+                if (!this.hasUserDecision()) {
+                    this.showCookieBanner();
+                }
+                this.bindEvents();
+            }
+            
+            hasUserDecision() {
+                return localStorage.getItem('cookieDecision') !== null;
+            }
+            
+            showCookieBanner() {
+                setTimeout(() => {
+                    const banner = document.getElementById('cookie-banner');
+                    if (banner) {
+                        banner.classList.add('show');
+                        console.log('Cookie banner shown');
+                    }
+                }, 1000);
+            }
+            
+            hideCookieBanner() {
+                const banner = document.getElementById('cookie-banner');
+                if (banner) {
+                    banner.classList.remove('show');
+                    banner.classList.add('hide');
+                }
+            }
+            
+            async saveDecision(type) {
+                // Save to localStorage
+                localStorage.setItem('cookieDecision', type);
+                localStorage.setItem('cookieSettings', JSON.stringify(this.cookieSettings));
+                localStorage.setItem('cookieTimestamp', new Date().toISOString());
+                
+                // Save to Supabase for legal compliance
+                await this.logCookieConsent(type);
+                
+                this.hideCookieBanner();
+            }
+            
+            async logCookieConsent(decision) {
+                try {
+                    const consentData = {
+                        user_id: this.getUserId(),
+                        decision_type: decision,
+                        cookie_settings: this.cookieSettings,
+                        user_agent: navigator.userAgent,
+                        page_url: window.location.href
+                    };
+                    
+                    const response = await fetch('/api/cookie-consent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(consentData)
+                    });
+                    
+                    if (response.ok) {
+                        console.log('Cookie consent logged successfully');
+                    } else {
+                        console.warn('Failed to log cookie consent:', response.status);
+                    }
+                } catch (error) {
+                    console.warn('Error logging cookie consent:', error);
+                }
+            }
+            
+            getUserId() {
+                let userId = localStorage.getItem('anonymousUserId');
+                if (!userId) {
+                    userId = 'anon_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+                    localStorage.setItem('anonymousUserId', userId);
+                }
+                return userId;
+            }
+            
+            loadCookieSettings() {
+                const saved = localStorage.getItem('cookieSettings');
+                if (saved) {
+                    this.cookieSettings = { ...this.cookieSettings, ...JSON.parse(saved) };
+                }
+            }
+            
+            async acceptAll() {
+                this.cookieSettings = {
+                    necessary: true,
+                    analytics: true,
+                    marketing: true,
+                    functional: true
+                };
+                await this.saveDecision('accept_all');
+            }
+            
+            async rejectAll() {
+                this.cookieSettings = {
+                    necessary: true,
+                    analytics: false,
+                    marketing: false,
+                    functional: false
+                };
+                await this.saveDecision('reject_all');
+            }
+            
+            showSettings() {
+                const modal = document.getElementById('cookie-settings-modal');
+                if (modal) {
+                    modal.classList.add('show');
+                    this.updateSettingsUI();
+                }
+            }
+            
+            hideSettings() {
+                const modal = document.getElementById('cookie-settings-modal');
+                if (modal) modal.classList.remove('show');
+            }
+            
+            updateSettingsUI() {
+                Object.keys(this.cookieSettings).forEach(key => {
+                    const toggle = document.getElementById('cookie-' + key);
+                    if (toggle) toggle.checked = this.cookieSettings[key];
+                });
+            }
+            
+            async saveCustomSettings() {
+                Object.keys(this.cookieSettings).forEach(key => {
+                    const toggle = document.getElementById('cookie-' + key);
+                    if (toggle && key !== 'necessary') {
+                        this.cookieSettings[key] = toggle.checked;
+                    }
+                });
+                await this.saveDecision('custom');
+                this.hideSettings();
+            }
+            
+            bindEvents() {
+                // Wait for DOM to be ready
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.setupEventListeners();
+                });
+                
+                // Also try to bind immediately in case DOM is already ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        this.setupEventListeners();
+                    });
+                } else {
+                    this.setupEventListeners();
+                }
+            }
+            
+            setupEventListeners() {
+                // Banner buttons
+                const acceptBtn = document.getElementById('accept-all-cookies');
+                const rejectBtn = document.getElementById('reject-all-cookies');
+                const settingsBtn = document.getElementById('cookie-settings-btn');
+                
+                if (acceptBtn) {
+                    acceptBtn.addEventListener('click', () => {
+                        console.log('Accept all clicked');
+                        this.acceptAll();
+                    });
+                }
+                if (rejectBtn) {
+                    rejectBtn.addEventListener('click', () => {
+                        console.log('Reject all clicked');
+                        this.rejectAll();
+                    });
+                }
+                if (settingsBtn) {
+                    settingsBtn.addEventListener('click', () => {
+                        console.log('Settings clicked');
+                        this.showSettings();
+                    });
+                }
+                
+                // Settings modal buttons
+                const closeSettings = document.getElementById('close-cookie-settings');
+                const saveSettings = document.getElementById('save-cookie-settings');
+                
+                if (closeSettings) {
+                    closeSettings.addEventListener('click', () => this.hideSettings());
+                }
+                if (saveSettings) {
+                    saveSettings.addEventListener('click', () => this.saveCustomSettings());
+                }
+                
+                // Modal backdrop
+                const modal = document.getElementById('cookie-settings-modal');
+                if (modal) {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) this.hideSettings();
+                    });
+                }
+            }
+        }
+        
+        // Initialize cookie manager
+        const cookieManager = new CookieManager();
+        
+        // 3D Service Cards Animation Manager
+        class ServiceCards3D {
+            constructor() {
+                this.serviceCards = [];
+                this.init();
+            }
+            
+            init() {
+                // Wait for DOM to be ready
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        this.setup3DCards();
+                    });
+                } else {
+                    this.setup3DCards();
+                }
+            }
+            
+            setup3DCards() {
+                // Get all service cards
+                this.serviceCards = document.querySelectorAll('.service-card-3d');
+                
+                if (this.serviceCards.length === 0) {
+                    return; // No cards found, skip animation
+                }
+                
+                // Add mouse tracking to each service card
+                this.serviceCards.forEach((card, index) => {
+                    this.setupCardTracking(card);
+                });
+            }
+            
+            setupCardTracking(card) {
+                const cardElements = {
+                    header: card.querySelector('.h-48'),
+                    content: card.querySelector('.p-8'),
+                    title: card.querySelector('h3'),
+                    text: card.querySelector('p'),
+                    button: card.querySelector('a'),
+                    icon: card.querySelector('.h-48 i')
+                };
+                
+                card.addEventListener('mousemove', (e) => {
+                    this.handleMouseMove(e, card, cardElements);
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    this.resetCard(card, cardElements);
+                });
+            }
+            
+            handleMouseMove(e, card, elements) {
+                const rect = card.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                // Calculate mouse position relative to card center
+                const mouseX = e.clientX - centerX;
+                const mouseY = e.clientY - centerY;
+                
+                // Convert to rotation degrees (reduced intensity for subtlety)
+                const rotateY = (mouseX / rect.width) * 15;  // Max 15 degrees
+                const rotateX = -(mouseY / rect.height) * 15; // Max 15 degrees
+                
+                // Apply main card rotation
+                card.style.transform = 'rotateY(' + rotateY + 'deg) rotateX(' + rotateX + 'deg)';
+                
+                // Apply layered 3D effects to elements
+                if (elements.header) {
+                    elements.header.style.transform = 'translateZ(20px) rotateY(' + (rotateY * 0.5) + 'deg)';
+                }
+                
+                if (elements.title) {
+                    elements.title.style.transform = 'translateZ(30px) rotateY(' + (rotateY * 0.3) + 'deg)';
+                }
+                
+                if (elements.text) {
+                    elements.text.style.transform = 'translateZ(15px) rotateY(' + (rotateY * 0.2) + 'deg)';
+                }
+                
+                if (elements.button) {
+                    elements.button.style.transform = 'translateZ(40px) rotateY(' + (rotateY * 0.4) + 'deg) scale(1.02)';
+                }
+                
+                if (elements.icon) {
+                    elements.icon.style.transform = 'translateZ(30px) rotateY(' + (rotateY * 0.6) + 'deg) scale(1.1)';
+                }
+            }
+            
+            resetCard(card, elements) {
+                // Smooth return to original position
+                card.style.transform = 'rotateY(0deg) rotateX(0deg)';
+                
+                // Reset all elements
+                Object.values(elements).forEach(element => {
+                    if (element) {
+                        element.style.transform = 'translateZ(0px) rotateY(0deg) rotateX(0deg) scale(1)';
+                    }
+                });
+            }
+        }
+        
+        // Initialize 3D service cards
+        const serviceCards3D = new ServiceCards3D();
+        
+        // Hero Parallax Manager (Simplified - No scroll dependency)
+        class HeroParallax {
+            constructor() {
+                this.parallaxCards = [];
+                this.init();
+            }
+            
+            init() {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        this.setupParallax();
+                    });
+                } else {
+                    this.setupParallax();
+                }
+            }
+            
+            setupParallax() {
+                this.parallaxCards = document.querySelectorAll('.parallax-card');
+                
+                if (this.parallaxCards.length === 0) {
+                    return; // Elements not found
+                }
+                
+                // Add hover effects to parallax cards only
+                this.addCardInteractions();
+                
+                // Set initial opacity for cards (no scroll dependency)
+                this.setInitialCardStates();
+            }
+            
+            setInitialCardStates() {
+                this.parallaxCards.forEach((card, index) => {
+                    // Set a subtle animated opacity that cycles
+                    const animationDelay = index * 0.5;
+                    card.style.animation = 'cardPulse 4s ease-in-out infinite';
+                    card.style.animationDelay = animationDelay + 's';
+                });
+            }
+            
+            addCardInteractions() {
+                this.parallaxCards.forEach(card => {
+                    card.addEventListener('mouseenter', () => {
+                        card.style.filter = 'blur(0px) brightness(1.1)';
+                        card.style.opacity = '0.9';
+                        card.style.transform = 'translateY(-15px) scale(1.08)';
+                        // Temporarily disable the pulse animation
+                        card.style.animation = 'none';
+                    });
+                    
+                    card.addEventListener('mouseleave', () => {
+                        // Reset to default states
+                        card.style.filter = '';
+                        card.style.opacity = '';
+                        card.style.transform = '';
+                        // Re-enable pulse animation
+                        card.style.animation = 'cardPulse 4s ease-in-out infinite';
+                    });
+                });
+            }
+        }
+        
+        // Initialize hero parallax
+        const heroParallax = new HeroParallax();
+        
+        // Infinite Moving Testimonials Manager
+        class InfiniteTestimonials {
+            constructor() {
+                this.scroller = null;
+                this.cards = [];
+                this.isHovered = false;
+                this.init();
+            }
+            
+            init() {
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => {
+                        this.setupInfiniteScroll();
+                    });
+                } else {
+                    this.setupInfiniteScroll();
+                }
+            }
+            
+            setupInfiniteScroll() {
+                this.scroller = document.getElementById('testimonialsScroller');
+                this.cards = document.querySelectorAll('.testimonial-card');
+                
+                if (!this.scroller || this.cards.length === 0) {
+                    return; // Elements not found
+                }
+                
+                // Clone cards for infinite effect
+                this.cloneCards();
+                
+                // Add interaction listeners
+                this.addInteractionListeners();
+                
+                // Setup intersection observer for performance
+                this.setupIntersectionObserver();
+            }
+            
+            cloneCards() {
+                // Clone all cards to create seamless infinite loop
+                this.cards.forEach(card => {
+                    const clone = card.cloneNode(true);
+                    this.scroller.appendChild(clone);
+                });
+                
+                // Update cards list to include clones
+                this.cards = document.querySelectorAll('.testimonial-card');
+            }
+            
+            addInteractionListeners() {
+                // Pause animation on hover over the entire container
+                const container = document.querySelector('.infinite-testimonials-container');
+                
+                if (container) {
+                    container.addEventListener('mouseenter', () => {
+                        this.isHovered = true;
+                        this.scroller.style.animationPlayState = 'paused';
+                    });
+                    
+                    container.addEventListener('mouseleave', () => {
+                        this.isHovered = false;
+                        this.scroller.style.animationPlayState = 'running';
+                    });
+                }
+                
+                // Add individual card interactions
+                this.cards.forEach((card, index) => {
+                    card.addEventListener('mouseenter', () => {
+                        this.highlightCard(card);
+                    });
+                    
+                    card.addEventListener('mouseleave', () => {
+                        this.unhighlightCard(card);
+                    });
+                    
+                    // Add click interaction for potential future use
+                    card.addEventListener('click', () => {
+                        this.handleCardClick(card, index);
+                    });
+                });
+            }
+            
+            highlightCard(card) {
+                // Add subtle highlight effect
+                card.style.zIndex = '10';
+                card.style.transform = 'translateY(-8px) scale(1.02)';
+            }
+            
+            unhighlightCard(card) {
+                // Reset to normal state
+                card.style.zIndex = '1';
+                card.style.transform = 'translateY(0) scale(1)';
+            }
+            
+            handleCardClick(card, index) {
+                // Future enhancement: could open modal or detailed view
+                console.log('Testimonial card clicked:', index);
+                
+                // Add a subtle click feedback
+                card.style.transform = 'translateY(-5px) scale(0.98)';
+                setTimeout(() => {
+                    if (!this.isHovered) {
+                        card.style.transform = 'translateY(0) scale(1)';
+                    }
+                }, 150);
+            }
+            
+            setupIntersectionObserver() {
+                // Pause animation when section is not visible for performance
+                if (!window.IntersectionObserver) return;
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            this.scroller.style.animationPlayState = this.isHovered ? 'paused' : 'running';
+                        } else {
+                            this.scroller.style.animationPlayState = 'paused';
+                        }
+                    });
+                }, { threshold: 0.1 });
+                
+                const container = document.querySelector('.infinite-testimonials-container');
+                if (container) {
+                    observer.observe(container);
+                }
+            }
+            
+            // Method to dynamically change animation speed
+            setSpeed(speed) {
+                const durations = {
+                    'slow': '60s',
+                    'normal': '40s',
+                    'fast': '20s'
+                };
+                
+                if (durations[speed]) {
+                    this.scroller.style.animationDuration = durations[speed];
+                }
+            }
+            
+            // Method to change direction
+            setDirection(direction) {
+                if (direction === 'right') {
+                    this.scroller.style.animationName = 'scroll-right';
+                } else {
+                    this.scroller.style.animationName = 'scroll-left';
+                }
+            }
+        }
+        
+        // Initialize infinite testimonials
+        const infiniteTestimonials = new InfiniteTestimonials();
+        
+        // Legal Policies Functions
+        function showPrivacyPolicy() {
+            const modal = document.getElementById('privacy-policy-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function showCookiePolicy() {
+            const modal = document.getElementById('cookie-policy-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function showTermsOfService() {
+            const modal = document.getElementById('terms-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeLegalModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // Make functions globally available
+        window.showPrivacyPolicy = showPrivacyPolicy;
+        window.showCookiePolicy = showCookiePolicy;
+        window.showTermsOfService = showTermsOfService;
+        window.closeLegalModal = closeLegalModal;
+        
         </script>
+        
+        <!-- Cookie Banner -->
+        <div id="cookie-banner" class="cookie-banner">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-cookie-bite text-accent text-2xl mt-1"></i>
+                            <div>
+                                <h3 class="font-semibold text-lg mb-2">Configuración de Cookies</h3>
+                                <p class="text-sm opacity-90 leading-relaxed">
+                                    Utilizamos cookies para mejorar tu experiencia, analizar el tráfico y personalizar el contenido. 
+                                    Puedes aceptar todas las cookies o configurar tus preferencias.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 min-w-max">
+                        <button id="reject-all-cookies" class="px-4 py-2 text-sm border border-white/30 rounded-lg hover:bg-white/10 transition-colors">
+                            Rechazar Todas
+                        </button>
+                        <button id="cookie-settings-btn" class="px-4 py-2 text-sm border border-accent text-accent rounded-lg hover:bg-accent/10 transition-colors">
+                            Configurar
+                        </button>
+                        <button id="accept-all-cookies" class="px-6 py-2 text-sm bg-accent hover:bg-accent/90 rounded-lg font-medium transition-colors">
+                            Aceptar Todas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cookie Settings Modal -->
+        <div id="cookie-settings-modal" class="cookie-settings-modal">
+            <div class="cookie-settings-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-slate-800">Configuración de Cookies</h3>
+                    <button id="close-cookie-settings" class="text-slate-400 hover:text-slate-600 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- Necessary Cookies -->
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 pr-4">
+                            <h4 class="font-semibold text-slate-800 mb-2">Cookies Necesarias</h4>
+                            <p class="text-sm text-slate-600">
+                                Estas cookies son esenciales para el funcionamiento del sitio web y no se pueden desactivar.
+                            </p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cookie-necessary" checked disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Analytics Cookies -->
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 pr-4">
+                            <h4 class="font-semibold text-slate-800 mb-2">Cookies Analíticas</h4>
+                            <p class="text-sm text-slate-600">
+                                Nos ayudan a entender cómo los visitantes interactúan con el sitio web recopilando información de forma anónima.
+                            </p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cookie-analytics">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Marketing Cookies -->
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 pr-4">
+                            <h4 class="font-semibold text-slate-800 mb-2">Cookies de Marketing</h4>
+                            <p class="text-sm text-slate-600">
+                                Se utilizan para rastrear a los visitantes y mostrar anuncios relevantes y atractivos para cada usuario.
+                            </p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cookie-marketing">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Functional Cookies -->
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1 pr-4">
+                            <h4 class="font-semibold text-slate-800 mb-2">Cookies Funcionales</h4>
+                            <p class="text-sm text-slate-600">
+                                Permiten recordar tus preferencias y proporcionar características mejoradas y más personales.
+                            </p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="cookie-functional">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-4 mt-8">
+                    <button id="save-cookie-settings" class="px-6 py-3 bg-accent hover:bg-accent/90 text-white rounded-lg font-medium transition-colors">
+                        Guardar Configuración
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Privacy Policy Modal -->
+        <div id="privacy-policy-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 class="text-3xl font-bold text-slate-800">Política de Privacidad</h3>
+                        <button onclick="closeLegalModal('privacy-policy-modal')" class="text-slate-400 hover:text-slate-600 text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="prose prose-lg max-w-none text-slate-600">
+                        <p class="text-sm text-slate-500 mb-6">Última actualización: Enero 2024</p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">1. Información que Recopilamos</h4>
+                        <p class="mb-4">
+                            En CanarIAgentic recopilamos la siguiente información personal cuando usted:
+                        </p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li><strong>Utiliza nuestro formulario de contacto:</strong> nombre, email, empresa, teléfono y mensaje</li>
+                            <li><strong>Navega por nuestro sitio web:</strong> dirección IP, tipo de navegador, páginas visitadas y tiempo de permanencia</li>
+                            <li><strong>Interactúa con nuestros servicios:</strong> preferencias de usuario y historial de comunicaciones</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">2. Cómo Utilizamos su Información</h4>
+                        <p class="mb-4">Utilizamos su información personal para:</p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li>Responder a sus consultas y proporcionarle información sobre nuestros servicios</li>
+                            <li>Mejorar nuestro sitio web y servicios mediante análisis de uso</li>
+                            <li>Enviarle comunicaciones relacionadas con nuestros servicios (con su consentimiento)</li>
+                            <li>Cumplir con nuestras obligaciones legales</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">3. Base Legal para el Tratamiento</h4>
+                        <p class="mb-4">
+                            Procesamos su información personal basándonos en:
+                        </p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li><strong>Consentimiento:</strong> Para comunicaciones de marketing y cookies no esenciales</li>
+                            <li><strong>Intereses legítimos:</strong> Para mejorar nuestros servicios y seguridad del sitio web</li>
+                            <li><strong>Ejecución de contrato:</strong> Para proporcionar los servicios solicitados</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">4. Compartir Información</h4>
+                        <p class="mb-6">
+                            No vendemos, alquilamos ni compartimos su información personal con terceros, excepto:
+                        </p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li>Proveedores de servicios que nos ayudan a operar nuestro sitio web (como Supabase para almacenamiento de datos)</li>
+                            <li>Cuando sea requerido por ley o para proteger nuestros derechos legales</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">5. Sus Derechos (GDPR)</h4>
+                        <p class="mb-4">Bajo el GDPR, usted tiene derecho a:</p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li><strong>Acceso:</strong> Solicitar una copia de los datos personales que tenemos sobre usted</li>
+                            <li><strong>Rectificación:</strong> Corregir datos inexactos o incompletos</li>
+                            <li><strong>Supresión:</strong> Solicitar la eliminación de sus datos personales</li>
+                            <li><strong>Portabilidad:</strong> Recibir sus datos en un formato estructurado</li>
+                            <li><strong>Oposición:</strong> Oponerse al procesamiento de sus datos</li>
+                            <li><strong>Limitación:</strong> Solicitar la restricción del procesamiento</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">6. Seguridad de los Datos</h4>
+                        <p class="mb-6">
+                            Implementamos medidas de seguridad técnicas y organizativas apropiadas para proteger su información personal contra acceso no autorizado, alteración, divulgación o destrucción.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">7. Retención de Datos</h4>
+                        <p class="mb-6">
+                            Conservamos su información personal solo durante el tiempo necesario para los fines descritos en esta política, o según lo requerido por ley.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">8. Contacto</h4>
+                        <p class="mb-4">
+                            Para ejercer sus derechos o si tiene preguntas sobre esta política, contáctenos:
+                        </p>
+                        <ul class="list-none mb-6">
+                            <li><strong>Email:</strong> soporte@canariagentic.com</li>
+                            <li><strong>Teléfono:</strong> +34 649 823 612</li>
+                            <li><strong>Dirección:</strong> Santa Cruz de Tenerife, España</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cookie Policy Modal -->
+        <div id="cookie-policy-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 class="text-3xl font-bold text-slate-800">Política de Cookies</h3>
+                        <button onclick="closeLegalModal('cookie-policy-modal')" class="text-slate-400 hover:text-slate-600 text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="prose prose-lg max-w-none text-slate-600">
+                        <p class="text-sm text-slate-500 mb-6">Última actualización: Enero 2024</p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">¿Qué son las Cookies?</h4>
+                        <p class="mb-6">
+                            Las cookies son pequeños archivos de texto que se almacenan en su dispositivo cuando visita un sitio web. 
+                            Nos permiten recordar sus preferencias y mejorar su experiencia de navegación.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">Tipos de Cookies que Utilizamos</h4>
+                        
+                        <div class="bg-slate-50 p-6 rounded-xl mb-6">
+                            <h5 class="font-semibold text-slate-800 mb-3">Cookies Necesarias</h5>
+                            <p class="mb-2">
+                                <strong>Propósito:</strong> Esenciales para el funcionamiento básico del sitio web.
+                            </p>
+                            <p class="mb-2">
+                                <strong>Ejemplos:</strong> Configuración de idioma, estado de login, configuración de cookies.
+                            </p>
+                            <p><strong>Base legal:</strong> Interés legítimo (funcionamiento del sitio web).</p>
+                        </div>
+                        
+                        <div class="bg-slate-50 p-6 rounded-xl mb-6">
+                            <h5 class="font-semibold text-slate-800 mb-3">Cookies Analíticas</h5>
+                            <p class="mb-2">
+                                <strong>Propósito:</strong> Recopilar información sobre cómo los usuarios utilizan nuestro sitio web.
+                            </p>
+                            <p class="mb-2">
+                                <strong>Información recopilada:</strong> Páginas visitadas, tiempo de permanencia, fuente de tráfico.
+                            </p>
+                            <p><strong>Base legal:</strong> Consentimiento del usuario.</p>
+                        </div>
+                        
+                        <div class="bg-slate-50 p-6 rounded-xl mb-6">
+                            <h5 class="font-semibold text-slate-800 mb-3">Cookies de Marketing</h5>
+                            <p class="mb-2">
+                                <strong>Propósito:</strong> Personalizar publicidad y medir la efectividad de campañas.
+                            </p>
+                            <p class="mb-2">
+                                <strong>Uso:</strong> Mostrar anuncios relevantes y evitar anuncios repetitivos.
+                            </p>
+                            <p><strong>Base legal:</strong> Consentimiento del usuario.</p>
+                        </div>
+                        
+                        <div class="bg-slate-50 p-6 rounded-xl mb-6">
+                            <h5 class="font-semibold text-slate-800 mb-3">Cookies Funcionales</h5>
+                            <p class="mb-2">
+                                <strong>Propósito:</strong> Recordar preferencias del usuario para mejorar la experiencia.
+                            </p>
+                            <p class="mb-2">
+                                <strong>Ejemplos:</strong> Configuración de diseño, preferencias de contenido.
+                            </p>
+                            <p><strong>Base legal:</strong> Consentimiento del usuario.</p>
+                        </div>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">Gestión de Cookies</h4>
+                        <p class="mb-4">Puede gestionar sus preferencias de cookies de las siguientes maneras:</p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li><strong>Banner de cookies:</strong> Al visitar nuestro sitio por primera vez</li>
+                            <li><strong>Configuración de cookies:</strong> Haciendo clic en "Configurar Cookies" en cualquier momento</li>
+                            <li><strong>Configuración del navegador:</strong> A través de la configuración de su navegador web</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">Cookies de Terceros</h4>
+                        <p class="mb-6">
+                            Algunos de nuestros socios de confianza también pueden establecer cookies en nuestro sitio web para 
+                            proporcionar servicios analíticos y de publicidad. Estos terceros tienen sus propias políticas de privacidad.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">Actualizaciones de la Política</h4>
+                        <p class="mb-6">
+                            Podemos actualizar esta Política de Cookies ocasionalmente. Le notificaremos sobre cambios significativos 
+                            a través de nuestro sitio web o por otros medios apropiados.
+                        </p>
+                        
+                        <div class="mt-8 p-4 bg-accent/10 rounded-xl">
+                            <p class="text-center">
+                                <button onclick="cookieManager.showSettings()" class="bg-accent hover:bg-accent/90 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Configurar Mis Cookies
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Terms of Service Modal -->
+        <div id="terms-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 class="text-3xl font-bold text-slate-800">Términos de Servicio</h3>
+                        <button onclick="closeLegalModal('terms-modal')" class="text-slate-400 hover:text-slate-600 text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="prose prose-lg max-w-none text-slate-600">
+                        <p class="text-sm text-slate-500 mb-6">Última actualización: Enero 2024</p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">1. Aceptación de los Términos</h4>
+                        <p class="mb-6">
+                            Al acceder y utilizar el sitio web de CanarIAgentic, usted acepta cumplir con estos Términos de Servicio. 
+                            Si no está de acuerdo con alguno de estos términos, no utilice nuestros servicios.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">2. Descripción de los Servicios</h4>
+                        <p class="mb-4">CanarIAgentic ofrece:</p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li>Servicios de consultoría en inteligencia artificial</li>
+                            <li>Formación personalizada en IA para empresas</li>
+                            <li>Desarrollo de agentes de inteligencia artificial</li>
+                            <li>Diseño de páginas web y marketing digital impulsado por IA</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">3. Uso Aceptable</h4>
+                        <p class="mb-4">Al utilizar nuestros servicios, usted se compromete a:</p>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li>Proporcionar información precisa y actualizada</li>
+                            <li>No utilizar el sitio web para actividades ilegales o no autorizadas</li>
+                            <li>Respetar los derechos de propiedad intelectual</li>
+                            <li>No interferir con el funcionamiento normal del sitio web</li>
+                        </ul>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">4. Propiedad Intelectual</h4>
+                        <p class="mb-6">
+                            Todo el contenido de este sitio web, incluyendo pero no limitado a textos, gráficos, logos, iconos, 
+                            imágenes, clips de audio, descargas digitales y software, es propiedad de CanarIAgentic y está 
+                            protegido por las leyes de propiedad intelectual aplicables.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">5. Limitación de Responsabilidad</h4>
+                        <p class="mb-6">
+                            CanarIAgentic no será responsable de ningún daño directo, indirecto, incidental, especial o consecuente 
+                            que resulte del uso o la incapacidad de usar nuestros servicios, incluso si hemos sido notificados de 
+                            la posibilidad de tales daños.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">6. Privacidad</h4>
+                        <p class="mb-6">
+                            Su privacidad es importante para nosotros. Consulte nuestra Política de Privacidad para obtener 
+                            información sobre cómo recopilamos, utilizamos y protegemos su información.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">7. Modificaciones</h4>
+                        <p class="mb-6">
+                            Nos reservamos el derecho de modificar estos términos en cualquier momento. Las modificaciones 
+                            entrarán en vigor inmediatamente después de su publicación en el sitio web.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">8. Ley Aplicable</h4>
+                        <p class="mb-6">
+                            Estos términos se rigen por las leyes de España. Cualquier disputa será resuelta por los tribunales 
+                            competentes de Santa Cruz de Tenerife, España.
+                        </p>
+                        
+                        <h4 class="text-xl font-semibold text-slate-800 mb-4">9. Contacto</h4>
+                        <p class="mb-4">
+                            Si tiene preguntas sobre estos Términos de Servicio, contáctenos:
+                        </p>
+                        <ul class="list-none mb-6">
+                            <li><strong>Email:</strong> soporte@canariagentic.com</li>
+                            <li><strong>Teléfono:</strong> +34 649 823 612</li>
+                            <li><strong>Dirección:</strong> Santa Cruz de Tenerife, España</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
     </body>
     </html>
   `)
