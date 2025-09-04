@@ -2052,7 +2052,7 @@ app.get('/', (c) => {
                 opacity: 0.8;
             }
             
-            .logo-text {
+            .floating-logo-text {
                 font-size: 9px;
                 font-weight: 600;
                 text-align: center;
@@ -2060,17 +2060,17 @@ app.get('/', (c) => {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             }
             
-            .logo-text .canar {
+            .floating-logo-text .canar {
                 color: #60a5fa;
                 text-shadow: 0 1px 2px rgba(96, 165, 250, 0.3);
             }
             
-            .logo-text .ia {
+            .floating-logo-text .ia {
                 color: #ffffff;
                 text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
             }
             
-            .logo-text .gentic {
+            .floating-logo-text .gentic {
                 color: #60a5fa;
                 text-shadow: 0 1px 2px rgba(96, 165, 250, 0.3);
             }
@@ -2827,7 +2827,7 @@ app.get('/', (c) => {
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
-                <div class="logo-text">
+                <div class="floating-logo-text">
                     <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
@@ -2837,7 +2837,7 @@ app.get('/', (c) => {
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
-                <div class="logo-text">
+                <div class="floating-logo-text">
                     <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
@@ -2847,7 +2847,7 @@ app.get('/', (c) => {
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
-                <div class="logo-text">
+                <div class="floating-logo-text">
                     <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
