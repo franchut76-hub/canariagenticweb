@@ -2835,8 +2835,11 @@ app.get('/', (c) => {
                     <!-- Company Info -->
                     <div>
                         <div class="flex items-center space-x-3 mb-6">
-                            <div class="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center animate-float">
-                                <i class="fas fa-robot text-white text-lg"></i>
+                            <div class="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center animate-float p-1">
+                                <img src="https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/logo%20canariagent2.webp" 
+                                     alt="CanarIAgentic Logo" 
+                                     class="w-full h-full object-contain rounded-md"
+                                     style="filter: brightness(1.1) contrast(1.1);">
                             </div>
                             <span class="text-2xl font-bold text-white">Canar<span class="text-accent">IA</span>gentic</span>
                         </div>
