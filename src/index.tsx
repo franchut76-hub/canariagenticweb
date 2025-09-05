@@ -2888,7 +2888,7 @@ app.get('/', (c) => {
                     <div>
                         <h4 class="text-xl font-semibold mb-6">Legal</h4>
                         <ul class="space-y-3">
-                            <li><a href="#" onclick="showPrivacyPolicy()" class="text-slate-400 hover:text-white transition-colors">Política de Privacidad</a></li>
+                            <li><a href="https://www.genspark.ai/agents?id=b33d9fe6-d41b-4ac4-bb73-44a9a55b703d/privacidad" target="_blank" class="text-slate-400 hover:text-white transition-colors">Política de Privacidad</a></li>
                             <li><a href="#" onclick="showCookiePolicy()" class="text-slate-400 hover:text-white transition-colors">Política de Cookies</a></li>
                             <li><a href="#" onclick="showTermsOfService()" class="text-slate-400 hover:text-white transition-colors">Términos de Servicio</a></li>
                             <li><a href="#" onclick="cookieManager.showSettings()" class="text-slate-400 hover:text-white transition-colors">Configurar Cookies</a></li>
@@ -2902,7 +2902,7 @@ app.get('/', (c) => {
                     <div class="flex flex-col md:flex-row justify-between items-center">
                         <p class="text-slate-400 mb-4 md:mb-0">&copy; 2024 CanarIAgentic. Todos los derechos reservados.</p>
                         <div class="flex space-x-4 text-sm">
-                            <a href="#" onclick="showPrivacyPolicy()" class="text-slate-500 hover:text-slate-300 transition-colors">Privacidad</a>
+                            <a href="https://www.genspark.ai/agents?id=b33d9fe6-d41b-4ac4-bb73-44a9a55b703d/privacidad" target="_blank" class="text-slate-500 hover:text-slate-300 transition-colors">Privacidad</a>
                             <a href="#" onclick="showCookiePolicy()" class="text-slate-500 hover:text-slate-300 transition-colors">Cookies</a>
                             <a href="#" onclick="showTermsOfService()" class="text-slate-500 hover:text-slate-300 transition-colors">Términos</a>
                         </div>
