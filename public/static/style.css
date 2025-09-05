@@ -1,1 +1,148 @@
-h1 { font-family: Arial, Helvetica, sans-serif; }
+/* CanarIAgentic Custom Styles */
+
+h1 { 
+    font-family: Arial, Helvetica, sans-serif; 
+}
+
+/* Evervault Card Enhancements */
+.evervault-card-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    pointer-events: none;
+    background: transparent;
+    overflow: hidden;
+}
+
+.evervault-card-bg canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Enhanced hover effects for hero section */
+#home {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(248, 250, 252, 1.0), rgba(241, 245, 249, 1.0));
+}
+
+/* Ensure hero content is above evervault effect */
+.hero-content {
+    position: relative;
+    z-index: 50 !important;
+}
+
+/* Smooth transitions for all interactive elements */
+.evervault-card-bg * {
+    will-change: transform, opacity;
+}
+
+/* Mobile optimizations for Evervault effect */
+@media (max-width: 768px) {
+    .evervault-card-bg {
+        opacity: 0.9;
+    }
+}
+
+/* Performance optimizations */
+.evervault-card-bg canvas {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Additional gradient overlays for better text readability */
+.hero-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 50%,
+        transparent 100%
+    );
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Enhanced text shadow for better readability over Evervault */
+.hero-content h1 {
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.hero-content p {
+    text-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure buttons are always clickable */
+.hero-content a {
+    position: relative;
+    z-index: 60;
+    pointer-events: auto;
+}
+
+/* Subtle animation for Evervault container initialization */
+.evervault-card-bg {
+    animation: evervaultFadeIn 2s ease-out;
+}
+
+@keyframes evervaultFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1.0;
+    }
+}
+
+/* Dark mode enhancements (if needed in future) */
+@media (prefers-color-scheme: dark) {
+    .evervault-card-bg {
+        opacity: 0.95;
+    }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    .evervault-card-bg canvas {
+        animation: none;
+    }
+    
+    .evervault-card-bg {
+        animation: none;
+        opacity: 0.5;
+    }
+}
+
+/* Mejora la legibilidad del texto sobre el efecto */
+.hero-content {
+    backdrop-filter: blur(4px) !important;
+    background: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Asegurar que el texto sea siempre legible */
+.hero-content h1 {
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        0 1px 0px rgba(255, 255, 255, 0.8) !important;
+}
+
+.hero-content p {
+    text-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.08),
+        0 1px 0px rgba(255, 255, 255, 0.6) !important;
+}

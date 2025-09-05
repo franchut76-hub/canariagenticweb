@@ -325,6 +325,7 @@ app.get('/', (c) => {
         <!-- Critical CSS -->
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="/static/style.css">
         <script src="https://cdn.tailwindcss.com"></script>
         
         <!-- Tailwind Config -->
@@ -1457,16 +1458,18 @@ app.get('/', (c) => {
             }
             
             .glass {
-                background: rgba(255, 255, 255, 0.1);
+                background: rgba(71, 85, 105, 0.15);
                 backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
+                border: 1px solid rgba(71, 85, 105, 0.3);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
             }
             
             .gradient-text {
-                background: linear-gradient(135deg, #06b6d4, #3b82f6);
+                background: linear-gradient(135deg, #0891b2, #2563eb);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
+                color: #2563eb; /* Fallback para navegadores que no soportan background-clip */
             }
             
             .hover-lift {
@@ -1497,6 +1500,173 @@ app.get('/', (c) => {
             .hover-lift:hover {
                 transform: translateY(-5px);
                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            }
+            
+            /* Consultoría Card con imagen de fondo profesional */
+            .consultoria-card {
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.75) 0%,
+                    rgba(255, 255, 255, 0.70) 50%,
+                    rgba(248, 250, 252, 0.75) 100%
+                ),
+                url('https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/consultoriavanguardista.webp');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .consultoria-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.65) 0%,
+                    rgba(248, 250, 252, 0.60) 30%,
+                    rgba(241, 245, 249, 0.55) 70%,
+                    rgba(255, 255, 255, 0.70) 100%
+                );
+                z-index: 1;
+                pointer-events: none;
+            }
+            
+            .consultoria-card > * {
+                position: relative;
+                z-index: 2;
+            }
+            
+            .consultoria-card:hover::before {
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.50) 0%,
+                    rgba(248, 250, 252, 0.45) 30%,
+                    rgba(241, 245, 249, 0.40) 70%,
+                    rgba(255, 255, 255, 0.55) 100%
+                );
+            }
+            
+            /* Formación Card con imagen de fondo profesional */
+            .formacion-card {
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.75) 0%,
+                    rgba(255, 255, 255, 0.70) 50%,
+                    rgba(248, 250, 252, 0.75) 100%
+                ),
+                url('https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/formacionpersonalizada.webp');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .formacion-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.65) 0%,
+                    rgba(248, 250, 252, 0.60) 30%,
+                    rgba(241, 245, 249, 0.55) 70%,
+                    rgba(255, 255, 255, 0.70) 100%
+                );
+                z-index: 1;
+                pointer-events: none;
+            }
+            
+            .formacion-card > * {
+                position: relative;
+                z-index: 2;
+            }
+            
+            .formacion-card:hover::before {
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.50) 0%,
+                    rgba(248, 250, 252, 0.45) 30%,
+                    rgba(241, 245, 249, 0.40) 70%,
+                    rgba(255, 255, 255, 0.55) 100%
+                );
+            }
+            
+            /* Agentes IA Card con imagen de fondo profesional */
+            .agentes-card {
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.75) 0%,
+                    rgba(255, 255, 255, 0.70) 50%,
+                    rgba(248, 250, 252, 0.75) 100%
+                ),
+                url('https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/CreaciondeagentesIA.webp');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .agentes-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.65) 0%,
+                    rgba(248, 250, 252, 0.60) 30%,
+                    rgba(241, 245, 249, 0.55) 70%,
+                    rgba(255, 255, 255, 0.70) 100%
+                );
+                z-index: 1;
+                pointer-events: none;
+            }
+            
+            .agentes-card > * {
+                position: relative;
+                z-index: 2;
+            }
+            
+            .agentes-card:hover::before {
+                background: linear-gradient(
+                    135deg,
+                    rgba(255, 255, 255, 0.50) 0%,
+                    rgba(248, 250, 252, 0.45) 30%,
+                    rgba(241, 245, 249, 0.40) 70%,
+                    rgba(255, 255, 255, 0.55) 100%
+                );
+            }
+            
+            /* Responsive design para todas las tarjetas con imágenes */
+            @media (max-width: 768px) {
+                .consultoria-card, .formacion-card, .agentes-card {
+                    background-attachment: scroll; /* Mejor rendimiento en móviles */
+                }
+                
+                .consultoria-card::before, .formacion-card::before, .agentes-card::before {
+                    background: linear-gradient(
+                        135deg,
+                        rgba(255, 255, 255, 0.70) 0%,
+                        rgba(248, 250, 252, 0.65) 30%,
+                        rgba(241, 245, 249, 0.60) 70%,
+                        rgba(255, 255, 255, 0.75) 100%
+                    );
+                }
             }
             
             html { scroll-behavior: smooth; }
@@ -1886,8 +2056,11 @@ app.get('/', (c) => {
                     <!-- Logo -->
                     <div class="flex items-center">
                         <a href="#home" class="flex items-center space-x-3 hover:scale-105 transition-transform duration-300">
-                            <div class="w-10 h-10 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center animate-float">
-                                <i class="fas fa-robot text-white text-lg"></i>
+                            <div class="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center animate-float p-1">
+                                <img src="https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/logo%20canariagent2.webp" 
+                                     alt="CanarIAgentic Logo" 
+                                     class="w-full h-full object-contain rounded-md"
+                                     style="filter: brightness(1.1) contrast(1.1);">
                             </div>
                             <span class="logo-text">Canar<span class="ia-highlight">IA</span>gentic</span>
                         </a>
@@ -1932,8 +2105,8 @@ app.get('/', (c) => {
             
             <!-- Hero Parallax Background - DISABLED -->
             
-            <!-- AI Animated Background (maintained but with lower opacity) -->
-            <div class="ai-background opacity-30">
+            <!-- AI Animated Background (DISABLED for Evervault effect) -->
+            <div class="ai-background opacity-30" style="display: none;">
                 <!-- AI Waves -->
                 <div class="ai-waves"></div>
                 
@@ -1976,10 +2149,10 @@ app.get('/', (c) => {
                 <div class="particle" style="left: 25%; animation-delay: 11s;"></div>
             </div>
             
-            <!-- Original Background Elements -->
-            <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent opacity-5"></div>
-            <div class="absolute top-20 right-20 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-glow"></div>
+            <!-- Original Background Elements (DISABLED for Evervault effect) -->
+            <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent opacity-5" style="display: none;"></div>
+            <div class="absolute top-20 right-20 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse" style="display: none;"></div>
+            <div class="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-glow" style="display: none;"></div>
             
             <!-- Hero Content - Positioned over parallax -->
             <div class="hero-content relative z-40 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
@@ -2027,7 +2200,7 @@ app.get('/', (c) => {
                 
                 <div class="grid lg:grid-cols-3 gap-8">
                     <!-- Pillar 1: Formación -->
-                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
+                    <div class="section-fade-in hover-lift formacion-card rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
                         <div class="text-center mb-6">
                             <div class="w-20 h-20 bg-gradient-to-br from-accent to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-float">
                                 <i class="fas fa-graduation-cap text-white text-3xl"></i>
@@ -2061,7 +2234,7 @@ app.get('/', (c) => {
                     </div>
                     
                     <!-- Pillar 2: Consultoría -->
-                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
+                    <div class="section-fade-in hover-lift consultoria-card rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
                         <div class="text-center mb-6">
                             <div class="w-20 h-20 bg-gradient-to-br from-secondary to-accent rounded-2xl flex items-center justify-center mx-auto mb-6 animate-float" style="animation-delay: 0.2s;">
                                 <i class="fas fa-lightbulb text-white text-3xl"></i>
@@ -2095,7 +2268,7 @@ app.get('/', (c) => {
                     </div>
                     
                     <!-- Pillar 3: Agentes -->
-                    <div class="section-fade-in hover-lift bg-white rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
+                    <div class="section-fade-in hover-lift agentes-card rounded-2xl p-8 shadow-lg border border-slate-200 flex flex-col h-full">
                         <div class="text-center mb-6">
                             <div class="w-20 h-20 bg-gradient-to-br from-accent to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-float" style="animation-delay: 0.4s;">
                                 <i class="fas fa-cogs text-white text-3xl"></i>
@@ -2379,11 +2552,11 @@ app.get('/', (c) => {
                             </blockquote>
                             <div class="flex items-center">
                                 <div class="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-full flex items-center justify-center text-white font-bold mr-4">
-                                    MR
+                                    VH
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-slate-800">María Rodríguez</h4>
-                                    <p class="text-slate-500">CEO, TechCorp Canarias</p>
+                                    <h4 class="font-semibold text-slate-800">Victor Hdez.</h4>
+                                    <p class="text-slate-500">Responsable, Taller Chicho Sport</p>
                                 </div>
                             </div>
                         </div>
@@ -2403,11 +2576,11 @@ app.get('/', (c) => {
                             </blockquote>
                             <div class="flex items-center">
                                 <div class="w-12 h-12 bg-gradient-to-br from-secondary to-accent rounded-full flex items-center justify-center text-white font-bold mr-4">
-                                    CL
+                                    JH
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-slate-800">Carlos López</h4>
-                                    <p class="text-slate-500">Director IT, Innovación S.L.</p>
+                                    <h4 class="font-semibold text-slate-800">Jose A. Hernández</h4>
+                                    <p class="text-slate-500">CEO, Grupo Metalurgico J.Candela</p>
                                 </div>
                             </div>
                         </div>
@@ -2431,7 +2604,7 @@ app.get('/', (c) => {
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-slate-800">Ana García</h4>
-                                    <p class="text-slate-500">COO, Digital Solutions</p>
+                                    <p class="text-slate-500">Responsable Administración, Taller Francisco</p>
                                 </div>
                             </div>
                         </div>
@@ -2451,11 +2624,11 @@ app.get('/', (c) => {
                             </blockquote>
                             <div class="flex items-center">
                                 <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
-                                    JS
+                                    IR
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-slate-800">Javier Santana</h4>
-                                    <p class="text-slate-500">CTO, StartupTech Canarias</p>
+                                    <h4 class="font-semibold text-slate-800">Isaac Rguez.</h4>
+                                    <p class="text-slate-500">Jefe de Peluquería Ariana</p>
                                 </div>
                             </div>
                         </div>
@@ -2475,11 +2648,11 @@ app.get('/', (c) => {
                             </blockquote>
                             <div class="flex items-center">
                                 <div class="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
-                                    LM
+                                    FJ
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-slate-800">Laura Martín</h4>
-                                    <p class="text-slate-500">Directora Operaciones, Manufactura Plus</p>
+                                    <h4 class="font-semibold text-slate-800">Francisco J.</h4>
+                                    <p class="text-slate-500">CEO Construcciones y reforma Minofra</p>
                                 </div>
                             </div>
                         </div>
@@ -3821,6 +3994,9 @@ app.get('/', (c) => {
         window.closeLegalModal = closeLegalModal;
         
         </script>
+        
+        <!-- External JavaScript -->
+        <script src="/static/app.js"></script>
         
         <!-- Cookie Banner -->
         <div id="cookie-banner" class="cookie-banner">
