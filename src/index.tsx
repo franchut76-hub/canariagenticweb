@@ -290,6 +290,417 @@ app.post('/api/init-cookie-table', async (c) => {
   }
 })
 
+// Privacy Policy page
+app.get('/privacidad', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Política de Privacidad de CanarIAgentic - Información sobre el tratamiento de datos personales">
+        <meta name="robots" content="index, follow">
+        
+        <title>Política de Privacidad - CanarIAgentic</title>
+        
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="/static/style.css">
+        <script src="https://cdn.tailwindcss.com"></script>
+        
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#0f172a',
+                            secondary: '#3b82f6',
+                            accent: '#06b6d4',
+                            'glass': 'rgba(255, 255, 255, 0.1)'
+                        },
+                        fontFamily: {
+                            'inter': ['Inter', 'sans-serif']
+                        }
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body class="font-inter bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800">
+        
+        <!-- Navigation -->
+        <nav class="fixed w-full top-0 z-50 glass transition-all duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-20">
+                    <!-- Logo -->
+                    <div class="flex items-center">
+                        <a href="/" class="flex items-center space-x-3 hover:scale-105 transition-transform duration-300">
+                            <div class="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center animate-float p-1">
+                                <img src="https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/logo%20canariagent2.webp" 
+                                     alt="CanarIAgentic Logo" 
+                                     class="w-full h-full object-contain rounded-md"
+                                     style="filter: brightness(1.1) contrast(1.1);">
+                            </div>
+                            <span class="text-2xl font-bold text-slate-800">Canar<span class="text-accent">IA</span>gentic</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Back button -->
+                    <div>
+                        <a href="/" class="btn-gradient text-white px-6 py-2 rounded-full font-medium flex items-center space-x-2">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Volver al Inicio</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Privacy Policy Content -->
+        <main class="pt-32 pb-20">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <!-- Header -->
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl lg:text-5xl font-bold text-slate-800 mb-6">
+                        Política de <span class="gradient-text">Privacidad</span>
+                    </h1>
+                    <p class="text-xl text-slate-600 max-w-3xl mx-auto">
+                        En CanarIAgentic, nos comprometemos a proteger y respetar tu privacidad. 
+                        Esta política explica cómo recopilamos, utilizamos y protegemos tu información personal.
+                    </p>
+                    <div class="mt-6 text-sm text-slate-500">
+                        <p><strong>Última actualización:</strong> 5 de Enero de 2025</p>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="prose prose-lg max-w-none">
+                    
+                    <!-- 1. Información que recopilamos -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-database text-accent mr-4"></i>
+                            1. Información que Recopilamos
+                        </h2>
+                        
+                        <h3 class="text-xl font-semibold text-slate-700 mb-4">1.1 Información Personal</h3>
+                        <p class="text-slate-600 mb-6">Recopilamos información que nos proporcionas directamente, incluyendo:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li>Nombre y datos de contacto (email, teléfono)</li>
+                            <li>Información de la empresa (nombre, cargo, sector)</li>
+                            <li>Consultas y comunicaciones que nos envías</li>
+                            <li>Información de registro para servicios de formación</li>
+                        </ul>
+
+                        <h3 class="text-xl font-semibold text-slate-700 mb-4">1.2 Información Técnica</h3>
+                        <p class="text-slate-600 mb-6">Automáticamente recopilamos información técnica cuando visitas nuestro sitio:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li>Dirección IP y ubicación geográfica aproximada</li>
+                            <li>Tipo de navegador y versión del sistema operativo</li>
+                            <li>Páginas visitadas y tiempo de permanencia</li>
+                            <li>Cookies y tecnologías de seguimiento similares</li>
+                        </ul>
+                    </section>
+
+                    <!-- 2. Cómo utilizamos tu información -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-cogs text-accent mr-4"></i>
+                            2. Cómo Utilizamos tu Información
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">Utilizamos la información recopilada para los siguientes propósitos:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li><strong>Prestación de servicios:</strong> Proporcionar consultoría, formación y desarrollo de agentes IA</li>
+                            <li><strong>Comunicación:</strong> Responder a consultas y proporcionar soporte técnico</li>
+                            <li><strong>Mejora del sitio web:</strong> Analizar el uso para optimizar la experiencia del usuario</li>
+                            <li><strong>Marketing directo:</strong> Enviar información sobre nuestros servicios (solo con consentimiento)</li>
+                            <li><strong>Cumplimiento legal:</strong> Cumplir con obligaciones legales y regulatorias</li>
+                        </ul>
+                    </section>
+
+                    <!-- 3. Base legal para el tratamiento -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-balance-scale text-accent mr-4"></i>
+                            3. Base Legal para el Tratamiento
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">Procesamos tus datos personales basándonos en:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li><strong>Consentimiento:</strong> Cuando has dado tu consentimiento explícito</li>
+                            <li><strong>Ejecución contractual:</strong> Para cumplir con contratos de servicios</li>
+                            <li><strong>Interés legítimo:</strong> Para mejorar nuestros servicios y comunicaciones comerciales</li>
+                            <li><strong>Cumplimiento legal:</strong> Para cumplir con obligaciones legales aplicables</li>
+                        </ul>
+                    </section>
+
+                    <!-- 4. Compartir información -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-share-alt text-accent mr-4"></i>
+                            4. Compartir Información con Terceros
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">No vendemos ni alquilamos tu información personal. Podemos compartir información en las siguientes circunstancias:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li><strong>Proveedores de servicios:</strong> Empresas que nos ayudan a operar nuestro negocio (hosting, analytics)</li>
+                            <li><strong>Cumplimiento legal:</strong> Cuando sea requerido por ley o autoridades competentes</li>
+                            <li><strong>Protección de derechos:</strong> Para proteger nuestros derechos, propiedad o seguridad</li>
+                            <li><strong>Con tu consentimiento:</strong> En cualquier otra circunstancia con tu autorización expresa</li>
+                        </ul>
+                    </section>
+
+                    <!-- 5. Cookies y tecnologías de seguimiento -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-cookie-bite text-accent mr-4"></i>
+                            5. Cookies y Tecnologías de Seguimiento
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">Utilizamos cookies y tecnologías similares para:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li><strong>Cookies esenciales:</strong> Necesarias para el funcionamiento básico del sitio</li>
+                            <li><strong>Cookies analíticas:</strong> Para entender cómo los usuarios interactúan con nuestro sitio</li>
+                            <li><strong>Cookies de marketing:</strong> Para personalizar contenido y anuncios (con consentimiento)</li>
+                        </ul>
+                        <p class="text-slate-600 mb-4">
+                            Puedes controlar las cookies a través de la configuración de tu navegador o utilizando nuestro centro de preferencias de cookies.
+                        </p>
+                    </section>
+
+                    <!-- 6. Seguridad de los datos -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-shield-alt text-accent mr-4"></i>
+                            6. Seguridad de los Datos
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">Implementamos medidas de seguridad técnicas y organizativas apropiadas para proteger tu información:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li>Cifrado de datos en tránsito y en reposo</li>
+                            <li>Acceso restringido solo a personal autorizado</li>
+                            <li>Monitoreo regular de seguridad y auditorías</li>
+                            <li>Copias de seguridad regulares y planes de recuperación</li>
+                        </ul>
+                    </section>
+
+                    <!-- 7. Tus derechos -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-user-shield text-accent mr-4"></i>
+                            7. Tus Derechos de Privacidad
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">Bajo la legislación de protección de datos aplicable, tienes derecho a:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li><strong>Acceso:</strong> Solicitar una copia de tus datos personales</li>
+                            <li><strong>Rectificación:</strong> Corregir datos inexactos o incompletos</li>
+                            <li><strong>Supresión:</strong> Solicitar la eliminación de tus datos</li>
+                            <li><strong>Portabilidad:</strong> Recibir tus datos en un formato estructurado</li>
+                            <li><strong>Oposición:</strong> Oponerte al procesamiento de tus datos</li>
+                            <li><strong>Limitación:</strong> Restringir el procesamiento de tus datos</li>
+                        </ul>
+                        
+                        <div class="bg-accent/10 border border-accent/20 rounded-lg p-4 mt-6">
+                            <p class="text-slate-700">
+                                <strong>Para ejercer tus derechos:</strong> 
+                                Contáctanos en <a href="#contact" class="text-accent hover:text-accent/80 font-medium">info@canariagentic.com</a> 
+                                o utiliza nuestro formulario de contacto.
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- 8. Retención de datos -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-clock text-accent mr-4"></i>
+                            8. Retención de Datos
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">Conservamos tus datos personales durante el tiempo necesario para:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li>Cumplir con los propósitos para los que fueron recopilados</li>
+                            <li>Satisfacer requisitos legales, contables o de informes</li>
+                            <li>Resolver disputas y hacer cumplir nuestros acuerdos</li>
+                        </ul>
+                        <p class="text-slate-600">
+                            Cuando ya no necesitemos tus datos, los eliminaremos de forma segura o los anonimizaremos.
+                        </p>
+                    </section>
+
+                    <!-- 9. Transferencias internacionales -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-globe text-accent mr-4"></i>
+                            9. Transferencias Internacionales
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">
+                            Algunos de nuestros proveedores de servicios pueden estar ubicados fuera del Espacio Económico Europeo (EEE). 
+                            Cuando transferimos datos fuera del EEE, nos aseguramos de que estén protegidos mediante:
+                        </p>
+                        <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                            <li>Decisiones de adecuación de la Comisión Europea</li>
+                            <li>Cláusulas contractuales tipo aprobadas</li>
+                            <li>Certificaciones de privacidad reconocidas</li>
+                        </ul>
+                    </section>
+
+                    <!-- 10. Menores de edad -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-child text-accent mr-4"></i>
+                            10. Menores de Edad
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">
+                            Nuestros servicios están dirigidos a profesionales y empresas. No recopilamos intencionalmente 
+                            información personal de menores de 16 años. Si descubrimos que hemos recopilado datos de un menor, 
+                            los eliminaremos inmediatamente.
+                        </p>
+                    </section>
+
+                    <!-- 11. Cambios en esta política -->
+                    <section class="mb-12 bg-white rounded-2xl p-8 shadow-lg border border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-edit text-accent mr-4"></i>
+                            11. Cambios en esta Política
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">
+                            Podemos actualizar esta política de privacidad periódicamente para reflejar cambios en nuestras 
+                            prácticas o por razones legales. Te notificaremos sobre cambios significativos por email o 
+                            mediante un aviso prominente en nuestro sitio web.
+                        </p>
+                    </section>
+
+                    <!-- 12. Contacto -->
+                    <section class="mb-12 bg-gradient-to-br from-accent/10 to-secondary/10 border border-accent/20 rounded-2xl p-8">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center">
+                            <i class="fas fa-envelope text-accent mr-4"></i>
+                            12. Información de Contacto
+                        </h2>
+                        
+                        <p class="text-slate-600 mb-6">
+                            Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos personales, 
+                            no dudes en contactarnos:
+                        </p>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-3">Datos de Contacto</h4>
+                                <ul class="space-y-2 text-slate-600">
+                                    <li><strong>Email:</strong> info@canariagentic.com</li>
+                                    <li><strong>Empresa:</strong> CanarIAgentic</li>
+                                    <li><strong>Ubicación:</strong> Canarias, España</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-3">Respuesta a Consultas</h4>
+                                <p class="text-slate-600 mb-4">
+                                    Nos comprometemos a responder a tus consultas sobre privacidad en un plazo de 
+                                    <strong>30 días hábiles</strong> desde su recepción.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 text-center">
+                            <a href="/#contact" class="btn-gradient text-white px-8 py-3 rounded-full font-medium inline-flex items-center space-x-3">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Contactar Ahora</span>
+                            </a>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-slate-900 text-white py-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div class="flex items-center justify-center space-x-3 mb-4">
+                    <div class="w-8 h-8 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center p-1">
+                        <img src="https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/logo%20canariagent2.webp" 
+                             alt="CanarIAgentic Logo" 
+                             class="w-full h-full object-contain rounded-md"
+                             style="filter: brightness(1.1) contrast(1.1);">
+                    </div>
+                    <span class="text-lg font-bold">Canar<span class="text-accent">IA</span>gentic</span>
+                </div>
+                <p class="text-slate-400 mb-4">&copy; 2025 CanarIAgentic. Todos los derechos reservados.</p>
+                <div class="flex justify-center space-x-6 text-sm">
+                    <a href="/" class="text-slate-400 hover:text-white transition-colors">Inicio</a>
+                    <a href="/privacidad" class="text-accent font-medium">Política de Privacidad</a>
+                    <a href="/#contact" class="text-slate-400 hover:text-white transition-colors">Contacto</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Styles -->
+        <style>
+            .gradient-text {
+                background: linear-gradient(135deg, #0891b2, #2563eb);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                color: #2563eb;
+            }
+
+            .btn-gradient {
+                background: linear-gradient(135deg, #06b6d4, #3b82f6);
+                transition: all 0.3s ease;
+            }
+
+            .btn-gradient:hover {
+                background: linear-gradient(135deg, #0891b2, #2563eb);
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(6, 182, 212, 0.4);
+            }
+
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-5px); }
+            }
+            
+            .animate-float {
+                animation: float 3s ease-in-out infinite;
+            }
+
+            .glass {
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            }
+
+            html { scroll-behavior: smooth; }
+            
+            /* Custom scrollbar */
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
+            
+            ::-webkit-scrollbar-track {
+                background: #f1f5f9;
+            }
+            
+            ::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #06b6d4, #3b82f6);
+                border-radius: 4px;
+            }
+            
+            ::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(135deg, #0891b2, #2563eb);
+            }
+        </style>
+    </body>
+    </html>
+  `)
+})
+
 // Default route - Main page
 app.get('/', (c) => {
   return c.html(`
@@ -2888,7 +3299,7 @@ app.get('/', (c) => {
                     <div>
                         <h4 class="text-xl font-semibold mb-6">Legal</h4>
                         <ul class="space-y-3">
-                            <li><a href="https://www.genspark.ai/agents?id=b33d9fe6-d41b-4ac4-bb73-44a9a55b703d/privacidad" target="_blank" class="text-slate-400 hover:text-white transition-colors">Política de Privacidad</a></li>
+                            <li><a href="/privacidad" class="text-slate-400 hover:text-white transition-colors">Política de Privacidad</a></li>
                             <li><a href="#" onclick="showCookiePolicy()" class="text-slate-400 hover:text-white transition-colors">Política de Cookies</a></li>
                             <li><a href="#" onclick="showTermsOfService()" class="text-slate-400 hover:text-white transition-colors">Términos de Servicio</a></li>
                             <li><a href="#" onclick="cookieManager.showSettings()" class="text-slate-400 hover:text-white transition-colors">Configurar Cookies</a></li>
@@ -2902,7 +3313,7 @@ app.get('/', (c) => {
                     <div class="flex flex-col md:flex-row justify-between items-center">
                         <p class="text-slate-400 mb-4 md:mb-0">&copy; 2024 CanarIAgentic. Todos los derechos reservados.</p>
                         <div class="flex space-x-4 text-sm">
-                            <a href="https://www.genspark.ai/agents?id=b33d9fe6-d41b-4ac4-bb73-44a9a55b703d/privacidad" target="_blank" class="text-slate-500 hover:text-slate-300 transition-colors">Privacidad</a>
+                            <a href="/privacidad" class="text-slate-500 hover:text-slate-300 transition-colors">Privacidad</a>
                             <a href="#" onclick="showCookiePolicy()" class="text-slate-500 hover:text-slate-300 transition-colors">Cookies</a>
                             <a href="#" onclick="showTermsOfService()" class="text-slate-500 hover:text-slate-300 transition-colors">Términos</a>
                         </div>
