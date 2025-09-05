@@ -2823,7 +2823,7 @@ app.get('/', (c) => {
             </div>
             
             <!-- Logo Flotante de CanarIAgentic -->
-            <div class="logo-particle" style="left: 15%; top: 80%;">
+            <div class="logo-particle" style="left: 5%; top: 80%;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -2833,7 +2833,7 @@ app.get('/', (c) => {
             </div>
             
             <!-- Segunda instancia del logo (con diferentes tiempos) -->
-            <div class="logo-particle" style="left: 75%; top: 20%; animation-delay: -35s; animation-duration: 50s;">
+            <div class="logo-particle" style="left: 90%; top: 20%; animation-delay: -35s; animation-duration: 50s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -2843,7 +2843,7 @@ app.get('/', (c) => {
             </div>
             
             <!-- Tercera instancia del logo (con diferentes tiempos) -->
-            <div class="logo-particle" style="left: 45%; top: 50%; animation-delay: -12s; animation-duration: 40s;">
+            <div class="logo-particle" style="left: 95%; top: 50%; animation-delay: -12s; animation-duration: 40s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -3057,7 +3057,7 @@ app.get('/', (c) => {
             </div>
             
             <!-- Logos flotantes para Pillars -->
-            <div class="logo-particle" style="left: 20%; top: 15%; animation-delay: -25s; animation-duration: 55s;">
+            <div class="logo-particle" style="left: 3%; top: 15%; animation-delay: -25s; animation-duration: 55s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -3065,7 +3065,7 @@ app.get('/', (c) => {
                     <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
-            <div class="logo-particle" style="left: 70%; top: 70%; animation-delay: -40s; animation-duration: 45s;">
+            <div class="logo-particle" style="left: 92%; top: 70%; animation-delay: -40s; animation-duration: 45s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -3210,7 +3210,7 @@ app.get('/', (c) => {
             </div>
             
             <!-- Logos flotantes para Services -->
-            <div class="logo-particle" style="left: 10%; top: 25%; animation-delay: -30s; animation-duration: 50s;">
+            <div class="logo-particle" style="left: 2%; top: 25%; animation-delay: -30s; animation-duration: 50s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -3218,7 +3218,7 @@ app.get('/', (c) => {
                     <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
-            <div class="logo-particle" style="left: 85%; top: 60%; animation-delay: -15s; animation-duration: 42s;">
+            <div class="logo-particle" style="left: 94%; top: 60%; animation-delay: -15s; animation-duration: 42s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -3418,7 +3418,7 @@ app.get('/', (c) => {
             </div>
             
             <!-- Logos flotantes para Testimonials -->
-            <div class="logo-particle" style="left: 25%; top: 35%; animation-delay: -22s; animation-duration: 48s;">
+            <div class="logo-particle" style="left: 4%; top: 35%; animation-delay: -22s; animation-duration: 48s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
@@ -3426,7 +3426,7 @@ app.get('/', (c) => {
                     <span class="canar">Canar</span><span class="ia">IA</span><span class="gentic">gentic</span>
                 </div>
             </div>
-            <div class="logo-particle" style="left: 75%; top: 10%; animation-delay: -38s; animation-duration: 52s;">
+            <div class="logo-particle" style="left: 93%; top: 10%; animation-delay: -38s; animation-duration: 52s;">
                 <div class="logo-symbol">
                     <div class="cc-symbol"></div>
                 </div>
