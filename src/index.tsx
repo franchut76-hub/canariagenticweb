@@ -4410,7 +4410,7 @@ app.get('/', (c) => {
         </script>
         
         <!-- External JavaScript -->
-        <script src="/static/app.js"></script>
+        <script src="/static/app.js?v=blue2025"></script>
         
         <!-- Cookie Banner -->
         <div id="cookie-banner" class="cookie-banner">

@@ -176,55 +176,55 @@ class EvervaultCard {
                 const y = i * this.cellSize + this.cellSize / 2;
                 
                 if (cell.revealed) {
-                    // Revealed characters - AZULES DE LA EMPRESA (#3b82f6, #06b6d4)
+                    // Revealed characters - AZULES SÚPER VISIBLES DE LA EMPRESA
                     const distance = Math.sqrt(
                         Math.pow(this.mouseX - x, 2) + Math.pow(this.mouseY - y, 2)
                     );
                     
-                    // Crear gradiente con azules de la marca CanarIAgentic
+                    // Crear gradiente con azules súper intensos y visibles
                     if (distance < 40) {
-                        // Muy cerca - AZUL SECUNDARIO INTENSO (#3b82f6)
-                        this.ctx.fillStyle = `rgba(59, 130, 246, ${Math.min(1.0, cell.opacity * 1.2)})`; 
+                        // Muy cerca - AZUL SECUNDARIO MÁXIMA INTENSIDAD (#3b82f6)
+                        this.ctx.fillStyle = `rgba(59, 130, 246, 1.0)`; 
                     } else if (distance < 80) {
-                        // Distancia media - AZUL ACCENT (#06b6d4)
-                        this.ctx.fillStyle = `rgba(6, 182, 212, ${Math.min(1.0, cell.opacity * 1.1)})`;
+                        // Distancia media - AZUL ACCENT MÁXIMA INTENSIDAD (#06b6d4)
+                        this.ctx.fillStyle = `rgba(6, 182, 212, 0.95)`;
                     } else {
-                        // Más lejos - AZUL SECUNDARIO SUAVE
-                        this.ctx.fillStyle = `rgba(59, 130, 246, ${Math.min(0.8, cell.opacity)})`;
+                        // Más lejos - AZUL SECUNDARIO VISIBLE
+                        this.ctx.fillStyle = `rgba(59, 130, 246, 0.8)`;
                     }
                 } else {
-                    // Normal characters - AZUL PRIMARIO OSCURO (#0f172a) para contraste
-                    this.ctx.fillStyle = `rgba(15, 23, 42, ${Math.min(0.7, cell.opacity * 2.5)})`;
+                    // Normal characters - AZUL OSCURO SÚPER VISIBLE
+                    this.ctx.fillStyle = `rgba(37, 99, 235, 0.6)`;
                 }
                 
                 this.ctx.fillText(cell.char, x, y);
             }
         }
         
-        // Add glow effect when hovering - AZULES DE LA EMPRESA
+        // Add glow effect when hovering - AZULES SÚPER INTENSOS
         if (this.isHovering) {
             const glowRadius = 180;
             const gradient = this.ctx.createRadialGradient(
                 this.mouseX, this.mouseY, 0,
                 this.mouseX, this.mouseY, glowRadius
             );
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.20)'); // AZUL SECUNDARIO central
-            gradient.addColorStop(0.3, 'rgba(6, 182, 212, 0.15)'); // AZUL ACCENT
-            gradient.addColorStop(0.6, 'rgba(59, 130, 246, 0.08)'); // AZUL SECUNDARIO suave
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)'); // AZUL SECUNDARIO central intenso
+            gradient.addColorStop(0.3, 'rgba(6, 182, 212, 0.3)'); // AZUL ACCENT intenso
+            gradient.addColorStop(0.6, 'rgba(59, 130, 246, 0.15)'); // AZUL SECUNDARIO suave
             gradient.addColorStop(1, 'transparent');
             
             this.ctx.fillStyle = gradient;
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             
-            // Añadir un segundo anillo de brillo intenso con azules de marca
+            // Añadir un segundo anillo de brillo SÚPER intenso
             const innerGlowRadius = 80;
             const innerGradient = this.ctx.createRadialGradient(
                 this.mouseX, this.mouseY, 0,
                 this.mouseX, this.mouseY, innerGlowRadius
             );
-            innerGradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)'); // AZUL SECUNDARIO intenso
-            innerGradient.addColorStop(0.4, 'rgba(6, 182, 212, 0.25)'); // AZUL ACCENT intenso
-            innerGradient.addColorStop(0.8, 'rgba(59, 130, 246, 0.15)'); // AZUL SECUNDARIO medio
+            innerGradient.addColorStop(0, 'rgba(59, 130, 246, 0.6)'); // AZUL SECUNDARIO máximo
+            innerGradient.addColorStop(0.4, 'rgba(6, 182, 212, 0.5)'); // AZUL ACCENT máximo
+            innerGradient.addColorStop(0.8, 'rgba(59, 130, 246, 0.25)'); // AZUL SECUNDARIO medio
             innerGradient.addColorStop(1, 'transparent');
             
             this.ctx.fillStyle = innerGradient;
