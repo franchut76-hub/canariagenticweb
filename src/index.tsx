@@ -786,6 +786,86 @@ app.get('/', (c) => {
                 to { opacity: 1; }
             }
             
+            /* Professional Video Background Styles */
+            .video-background {
+                z-index: 10;
+            }
+            
+            .video-background video {
+                filter: brightness(0.7) contrast(1.1) saturate(0.9);
+                transform: scale(1.02); /* Slight scale to avoid edge artifacts */
+            }
+            
+            /* Hero Content Styles for Video Background */
+            .hero-text-container {
+                background: rgba(255, 255, 255, 0.12);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                box-shadow: 
+                    0 25px 50px rgba(0, 0, 0, 0.25),
+                    0 0 0 1px rgba(255, 255, 255, 0.05);
+                transition: all 0.3s ease;
+            }
+            
+            .hero-text-container:hover {
+                background: rgba(255, 255, 255, 0.15);
+                transform: translateY(-5px);
+                box-shadow: 
+                    0 35px 60px rgba(0, 0, 0, 0.3),
+                    0 0 0 1px rgba(255, 255, 255, 0.1);
+            }
+            
+            /* Enhanced gradient text for video background */
+            .gradient-text-video {
+                background: linear-gradient(135deg, #60a5fa, #06b6d4, #3b82f6);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                color: #3b82f6; /* Fallback */
+                filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+                text-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            }
+            
+            /* Enhanced glass effect for video background */
+            .glass-video {
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+            }
+            
+            .glass-video:hover {
+                background: rgba(255, 255, 255, 0.25);
+                transform: translateY(-2px);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            }
+            
+            /* Responsive video optimization */
+            @media (max-width: 768px) {
+                .video-background video {
+                    transform: scale(1.1); /* Slightly larger scale on mobile for better coverage */
+                }
+                
+                .hero-text-container {
+                    padding: 2rem;
+                    margin: 0 1rem;
+                }
+                
+                .gradient-text-video {
+                    font-size: 2.5rem;
+                    line-height: 1.2;
+                }
+            }
+            
+            /* Ensure video doesn't interfere with scroll indicator */
+            .hero-content + * {
+                position: relative;
+                z-index: 60;
+            }
+            
             /* 3D Service Cards Animation Styles */
             .services-grid {
                 perspective: 1000px;
@@ -2514,85 +2594,62 @@ app.get('/', (c) => {
         <!-- Hero Section -->
         <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
             
-            <!-- Hero Parallax Background - DISABLED -->
-            
-            <!-- AI Animated Background (DISABLED for Evervault effect) -->
-            <div class="ai-background opacity-30" style="display: none;">
-                <!-- AI Waves -->
-                <div class="ai-waves"></div>
+            <!-- Professional Video Background -->
+            <div class="video-background absolute inset-0 w-full h-full">
+                <video 
+                    autoplay 
+                    muted 
+                    loop 
+                    playsinline
+                    preload="auto"
+                    class="absolute inset-0 w-full h-full object-cover"
+                    poster=""
+                >
+                    <source src="https://ryoyexwvvvswahqoffqu.supabase.co/storage/v1/object/public/imagenes%20web%20canariagentic/video%20canariagentic.mp4" type="video/mp4">
+                    <!-- Fallback for browsers that don't support video -->
+                    Su navegador no soporta videos HTML5.
+                </video>
                 
-                <!-- Neural Network -->
-                <div class="neural-network">
-                    <!-- Neural Nodes -->
-                    <div class="neural-node" style="top: 20%; left: 15%; animation-delay: 0s;"></div>
-                    <div class="neural-node" style="top: 30%; left: 25%; animation-delay: 0.5s;"></div>
-                    <div class="neural-node" style="top: 40%; left: 35%; animation-delay: 1s;"></div>
-                    <div class="neural-node" style="top: 60%; left: 45%; animation-delay: 1.5s;"></div>
-                    <div class="neural-node" style="top: 70%; left: 55%; animation-delay: 2s;"></div>
-                    <div class="neural-node" style="top: 25%; left: 65%; animation-delay: 0.3s;"></div>
-                    <div class="neural-node" style="top: 45%; left: 75%; animation-delay: 0.8s;"></div>
-                    <div class="neural-node" style="top: 15%; left: 85%; animation-delay: 1.3s;"></div>
-                    
-                    <!-- Neural Connections -->
-                    <div class="neural-connection" style="top: 25%; left: 15%; width: 120px; transform: rotate(25deg); animation-delay: 0.2s;"></div>
-                    <div class="neural-connection" style="top: 35%; left: 25%; width: 140px; transform: rotate(-15deg); animation-delay: 0.7s;"></div>
-                    <div class="neural-connection" style="top: 50%; left: 35%; width: 130px; transform: rotate(45deg); animation-delay: 1.2s;"></div>
-                    <div class="neural-connection" style="top: 65%; left: 45%; width: 110px; transform: rotate(-30deg); animation-delay: 1.7s;"></div>
-                    <div class="neural-connection" style="top: 30%; left: 55%; width: 150px; transform: rotate(60deg); animation-delay: 0.4s;"></div>
-                    <div class="neural-connection" style="top: 40%; left: 65%; width: 125px; transform: rotate(-45deg); animation-delay: 0.9s;"></div>
-                </div>
+                <!-- Professional overlay for better text readability -->
+                <div class="absolute inset-0 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-900/60"></div>
                 
-                <!-- Floating Particles -->
-                <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
-                <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
-                <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
-                <div class="particle" style="left: 40%; animation-delay: 6s;"></div>
-                <div class="particle" style="left: 50%; animation-delay: 8s;"></div>
-                <div class="particle" style="left: 60%; animation-delay: 10s;"></div>
-                <div class="particle" style="left: 70%; animation-delay: 12s;"></div>
-                <div class="particle" style="left: 80%; animation-delay: 14s;"></div>
-                <div class="particle" style="left: 90%; animation-delay: 16s;"></div>
-                <div class="particle" style="left: 15%; animation-delay: 1s;"></div>
-                <div class="particle" style="left: 35%; animation-delay: 3s;"></div>
-                <div class="particle" style="left: 55%; animation-delay: 5s;"></div>
-                <div class="particle" style="left: 75%; animation-delay: 7s;"></div>
-                <div class="particle" style="left: 85%; animation-delay: 9s;"></div>
-                <div class="particle" style="left: 25%; animation-delay: 11s;"></div>
+                <!-- Additional subtle brand color overlay -->
+                <div class="absolute inset-0 bg-gradient-to-tr from-secondary/20 via-transparent to-accent/20"></div>
             </div>
             
-            <!-- Original Background Elements (DISABLED for Evervault effect) -->
-            <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent opacity-5" style="display: none;"></div>
-            <div class="absolute top-20 right-20 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse" style="display: none;"></div>
-            <div class="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-glow" style="display: none;"></div>
-            
-            <!-- Hero Content - Positioned over parallax -->
-            <div class="hero-content relative z-40 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
+            <!-- Hero Content - Positioned over video background -->
+            <div class="hero-content relative z-50 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
                 <div class="animate-fade-in">
-                    <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-relaxed">
-                        Transformando Empresas con
-                        <span class="gradient-text block mt-2 relative z-50">Inteligencia Artificial</span>
-                    </h1>
-                    <p class="text-xl md:text-2xl text-slate-600 mb-10 max-w-4xl mx-auto leading-relaxed">
-                        CanarIAgentic es tu partner en soluciones de IA que impulsa la innovación y eficiencia empresarial a través de tecnología vanguardista y estrategias personalizadas.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                        <a href="#contact" class="btn-gradient text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center space-x-3 hover-lift">
-                            <i class="fas fa-rocket"></i>
-                            <span>Empezar Ahora</span>
-                        </a>
-                        <a href="#pillars" class="glass text-slate-700 px-8 py-4 rounded-full font-semibold text-lg flex items-center space-x-3 hover-lift">
-                            <i class="fas fa-info-circle"></i>
-                            <span>Conocer Más</span>
-                        </a>
+                    <!-- Enhanced content container with better readability over video -->
+                    <div class="hero-text-container backdrop-blur-sm bg-white/10 rounded-3xl p-8 lg:p-12 border border-white/20 shadow-2xl">
+                        <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-relaxed text-white drop-shadow-lg">
+                            Transformando Empresas con
+                            <span class="gradient-text-video block mt-2 relative z-50">Inteligencia Artificial</span>
+                        </h1>
+                        <p class="text-xl md:text-2xl text-white/90 mb-10 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
+                            CanarIAgentic es tu partner en soluciones de IA que impulsa la innovación y eficiencia empresarial a través de tecnología vanguardista y estrategias personalizadas.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                            <a href="#contact" class="btn-gradient text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center space-x-3 hover-lift shadow-lg">
+                                <i class="fas fa-rocket"></i>
+                                <span>Empezar Ahora</span>
+                            </a>
+                            <a href="#pillars" class="glass-video text-white px-8 py-4 rounded-full font-semibold text-lg flex items-center space-x-3 hover-lift shadow-lg">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Conocer Más</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
             
 
-            <!-- Scroll indicator -->
-            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                <a href="#pillars" class="text-slate-400 hover:text-accent transition-colors">
-                    <i class="fas fa-chevron-down text-2xl"></i>
+            <!-- Scroll indicator - Enhanced for video background -->
+            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-50">
+                <a href="#pillars" class="text-white/80 hover:text-accent transition-colors drop-shadow-lg">
+                    <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg">
+                        <i class="fas fa-chevron-down text-xl"></i>
+                    </div>
                 </a>
             </div>
         </section>
