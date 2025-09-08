@@ -798,22 +798,22 @@ app.get('/', (c) => {
             
             /* Hero Content Styles for Video Background */
             .hero-text-container {
-                background: rgba(255, 255, 255, 0.12);
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.25);
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
                 box-shadow: 
-                    0 25px 50px rgba(0, 0, 0, 0.25),
-                    0 0 0 1px rgba(255, 255, 255, 0.05);
+                    0 25px 50px rgba(0, 0, 0, 0.15),
+                    0 0 0 1px rgba(255, 255, 255, 0.02);
                 transition: all 0.3s ease;
             }
             
             .hero-text-container:hover {
-                background: rgba(255, 255, 255, 0.15);
+                background: rgba(255, 255, 255, 0.08);
                 transform: translateY(-5px);
                 box-shadow: 
-                    0 35px 60px rgba(0, 0, 0, 0.3),
-                    0 0 0 1px rgba(255, 255, 255, 0.1);
+                    0 35px 60px rgba(0, 0, 0, 0.2),
+                    0 0 0 1px rgba(255, 255, 255, 0.05);
             }
             
             /* Enhanced gradient text for video background */
@@ -829,18 +829,18 @@ app.get('/', (c) => {
             
             /* Enhanced glass effect for video background */
             .glass-video {
-                background: rgba(255, 255, 255, 0.15);
-                backdrop-filter: blur(10px);
-                -webkit-backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.25);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                background: rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
                 transition: all 0.3s ease;
             }
             
             .glass-video:hover {
-                background: rgba(255, 255, 255, 0.25);
+                background: rgba(255, 255, 255, 0.12);
                 transform: translateY(-2px);
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
             }
             
             /* Responsive video optimization */
@@ -2610,11 +2610,11 @@ app.get('/', (c) => {
                     Su navegador no soporta videos HTML5.
                 </video>
                 
-                <!-- Professional overlay for better text readability -->
-                <div class="absolute inset-0 bg-gradient-to-br from-slate-900/60 via-slate-900/40 to-slate-900/60"></div>
+                <!-- Minimal overlay for subtle text readability -->
+                <div class="absolute inset-0 bg-gradient-to-br from-slate-900/15 via-slate-900/10 to-slate-900/15"></div>
                 
-                <!-- Additional subtle brand color overlay -->
-                <div class="absolute inset-0 bg-gradient-to-tr from-secondary/20 via-transparent to-accent/20"></div>
+                <!-- Very subtle brand color accent -->
+                <div class="absolute inset-0 bg-gradient-to-tr from-secondary/5 via-transparent to-accent/5"></div>
             </div>
             
             <!-- Hero Content - Positioned over video background -->
