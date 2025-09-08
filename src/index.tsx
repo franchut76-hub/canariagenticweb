@@ -788,7 +788,7 @@ app.get('/', (c) => {
             
             /* Professional Video Background Styles */
             .video-background {
-                z-index: 10;
+                z-index: 1;
             }
             
             .video-background video {
@@ -860,10 +860,10 @@ app.get('/', (c) => {
                 }
             }
             
-            /* Ensure video doesn't interfere with scroll indicator */
+            /* Ensure proper layering */
             .hero-content + * {
                 position: relative;
-                z-index: 60;
+                z-index: 30;
             }
             
             /* 3D Service Cards Animation Styles */
@@ -1949,10 +1949,10 @@ app.get('/', (c) => {
             }
             
             .glass {
-                background: rgba(71, 85, 105, 0.15);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(71, 85, 105, 0.3);
-                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
             }
             
             .gradient-text {
@@ -2541,7 +2541,7 @@ app.get('/', (c) => {
     <body class="font-inter bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800">
         
         <!-- Navigation -->
-        <nav class="fixed w-full top-0 z-50 glass transition-all duration-300" id="navbar">
+        <nav class="fixed w-full top-0 z-[9999] glass transition-all duration-300" id="navbar">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-20">
                     <!-- Logo -->
@@ -2618,7 +2618,7 @@ app.get('/', (c) => {
             </div>
             
             <!-- Hero Content - Positioned over video background -->
-            <div class="hero-content relative z-50 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
+            <div class="hero-content relative z-20 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto flex flex-col justify-center">
                 <div class="animate-fade-in">
                     <!-- Enhanced content container with better readability over video -->
                     <div class="hero-text-container backdrop-blur-sm bg-white/10 rounded-3xl p-8 lg:p-12 border border-white/20 shadow-2xl">
@@ -2645,7 +2645,7 @@ app.get('/', (c) => {
             
 
             <!-- Scroll indicator - Enhanced for video background -->
-            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-50">
+            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-30">
                 <a href="#pillars" class="text-white/80 hover:text-accent transition-colors drop-shadow-lg">
                     <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg">
                         <i class="fas fa-chevron-down text-xl"></i>
@@ -4467,7 +4467,7 @@ app.get('/', (c) => {
         </script>
         
         <!-- External JavaScript -->
-        <script src="/static/app.js?v=blue2025"></script>
+        <script src="/static/app.js?v=layers2025"></script>
         
         <!-- Cookie Banner -->
         <div id="cookie-banner" class="cookie-banner">

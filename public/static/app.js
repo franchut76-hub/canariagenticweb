@@ -34,7 +34,7 @@ class EvervaultCard {
         this.canvas.style.width = '100%';
         this.canvas.style.height = '100%';
         this.canvas.style.pointerEvents = 'none';
-        this.canvas.style.zIndex = '20';
+        this.canvas.style.zIndex = '5';
         this.canvas.style.opacity = '1.0';
         
         this.ctx = this.canvas.getContext('2d');
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 20;
+            z-index: 5;
             pointer-events: none;
         `;
         
